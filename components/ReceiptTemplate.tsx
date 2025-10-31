@@ -58,7 +58,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
             const roomType = room.room_type || 'N/A';
             const bedType = room.bed_type || 'N/A';
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            const price = booking.price_per_night || 0;
+            const price = Number(booking.price_per_night) || 0;
             const key = `${roomType}-${bedType}-${price}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
