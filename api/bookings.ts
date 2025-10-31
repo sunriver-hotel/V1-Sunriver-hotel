@@ -71,6 +71,7 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
             const existingCustomer = await client.query('SELECT customer_id FROM public.customers WHERE phone = $1', [customer.phone]);
             if (existingCustomer.rows.length > 0) {
                 customerId = existingCustomer.rows[0].customer_id;
+                // Update existing customer details if they've changed
                 await client.query(
                     'UPDATE public.customers SET customer_name = $1, email = $2, address = $3, tax_id = $4 WHERE customer_id = $5',
                     [customer.customer_name, customer.email, customer.address, customer.tax_id, customerId]
@@ -87,49 +88,23 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         const createdBookings = [];
         // Loop through all selected rooms and create a booking for each
         for (const room_id of room_ids) {
-            let successfulInsert = false;
-            let attempts = 0;
-            const maxAttempts = 5;
+            // **THE FIX:** Use the database sequence to generate a unique number.
+            // This is atomic and safe for concurrent requests, eliminating race conditions.
+            const sequenceResult = await client.query("SELECT NEXTVAL('booking_seq') as next_val");
+            const nextVal = sequenceResult.rows[0].next_val;
 
-            // This loop retries generating a unique booking ID if a collision occurs (race condition).
-            while (!successfulInsert && attempts < maxAttempts) {
-                attempts++;
-                let booking_id;
-                try {
-                    // Generate a new ID on each attempt.
-                    const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                    // Re-query the count each time to get the latest number.
-                    const sequenceQuery = `SELECT count(*) FROM public.bookings WHERE booking_id LIKE $1`;
-                    const sequenceResult = await client.query(sequenceQuery, [`SRH-${datePrefix}-%`]);
-                    // The next number is based on current DB count + bookings already added in this transaction.
-                    const nextVal = parseInt(sequenceResult.rows[0].count, 10) + 1 + createdBookings.length;
-                    const paddedVal = String(nextVal).padStart(3, '0');
-                    booking_id = `SRH-${datePrefix}-${paddedVal}`;
+            const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const paddedVal = String(nextVal).padStart(3, '0');
+            const booking_id = `SRH-${datePrefix}-${paddedVal}`;
 
-                    const bookingQuery = `
-                        INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                        RETURNING *;
-                    `;
-                    const bookingResult = await client.query(bookingQuery, [booking_id, customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
-                    createdBookings.push(bookingResult.rows[0]);
-                    successfulInsert = true;
-                } catch (error: any) {
-                    // Error code '23505' is for unique_violation in PostgreSQL.
-                    if (error.code === '23505') {
-                        console.warn(`Booking ID collision on attempt ${attempts}. Retrying...`);
-                        if (attempts >= maxAttempts) {
-                            // If it fails after max attempts, throw an error to rollback the transaction.
-                            throw new Error(`Failed to create booking due to persistent ID collisions.`);
-                        }
-                        // Wait a short, random time to de-sync concurrent requests.
-                        await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
-                    } else {
-                        // If it's another type of error, re-throw it to abort the transaction.
-                        throw error;
-                    }
-                }
-            }
+            const bookingQuery = `
+                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING *;
+            `;
+            // If this INSERT fails for any other reason (e.g., check constraint), the entire transaction will be rolled back.
+            const bookingResult = await client.query(bookingQuery, [booking_id, customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
+            createdBookings.push(bookingResult.rows[0]);
         }
 
         await client.query('COMMIT');
@@ -142,6 +117,7 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         client.release();
     }
 };
+
 
 const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
   const { booking_id, customer, room_id, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
