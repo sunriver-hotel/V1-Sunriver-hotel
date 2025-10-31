@@ -59,8 +59,8 @@ const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, che
   };
 
   return (
-    <div className="w-full">
-        <div className="flex flex-wrap items-baseline justify-start mb-2 gap-4">
+    <div className="w-full border-t-2 border-gray-200 mt-8 pt-8">
+        <div className="flex flex-wrap items-baseline justify-start mb-4 gap-4">
             <h2 className="text-xl font-bold text-text-dark">Summary for {formattedDate}</h2>
             <input 
                 type="date"

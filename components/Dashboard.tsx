@@ -233,7 +233,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col gap-8 overflow-y-auto">
+      <main className="flex-grow flex flex-col overflow-y-auto">
         <div className="flex-grow min-h-[400px]">
           {isLoading ? (
             <div className="flex justify-center items-center h-full"><p>{t.loadingBookings}</p></div>
