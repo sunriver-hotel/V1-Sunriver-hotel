@@ -19,23 +19,33 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
     const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [showReceipt, setShowReceipt] = useState(false);
     
-    // **THE DEFINITIVE FIX**: Pre-filter the bookings to ensure every record has a valid ID.
-    // This prevents crashes from invalid data being used as React keys or in maps, which causes a white screen.
+    // Pre-filter the bookings to ensure every record has a valid ID.
+    // This prevents crashes from invalid data being used as React keys or in maps.
     const validBookings = useMemo(() => {
         return bookings.filter(b => b && b.booking_id);
     }, [bookings]);
 
     const filteredBookings = useMemo(() => {
-        const lowercasedTerm = searchTerm.toLowerCase();
+        const lowercasedTerm = searchTerm.toLowerCase().trim();
         if (!lowercasedTerm) {
-            return validBookings.slice(0, 10); // Show latest 10 by default from the valid list
+            return validBookings.slice(0, 10); // Show latest 10 by default
         }
-        return validBookings.filter(b => 
-            (b.customer?.customer_name?.toLowerCase().includes(lowercasedTerm)) ||
-            (b.customer?.phone?.includes(lowercasedTerm)) ||
-            (b.booking_id?.toLowerCase().includes(lowercasedTerm)) ||
-            (b.check_in_date?.includes(lowercasedTerm))
-        );
+        // **THE DEFINITIVE FIX**: Rewrite filter logic to be completely type-safe.
+        // Explicitly convert all fields to strings before calling string methods like .includes().
+        // This prevents a TypeError if, for example, a phone number is stored as a number in the DB.
+        return validBookings.filter(b => {
+            const name = b.customer?.customer_name || '';
+            const phone = String(b.customer?.phone || ''); // Convert number or null to string
+            const bookingId = b.booking_id || '';
+            const checkIn = b.check_in_date || '';
+
+            return (
+                name.toLowerCase().includes(lowercasedTerm) ||
+                phone.includes(lowercasedTerm) || // Now safe
+                bookingId.toLowerCase().includes(lowercasedTerm) ||
+                checkIn.includes(lowercasedTerm)
+            );
+        });
     }, [searchTerm, validBookings]);
 
     const handleSelectBooking = (bookingId: string) => {
@@ -58,7 +68,6 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
 
     const selectedBookings = useMemo(() => {
         if (selectedBookingIds.length === 0) return [];
-        // Use the sanitized validBookings array to build the map
         const bookingMap = new Map(validBookings.map(b => [b.booking_id, b]));
         return selectedBookingIds.map(id => bookingMap.get(id)).filter((b): b is Booking => !!b);
     }, [selectedBookingIds, validBookings]);
