@@ -60,7 +60,7 @@ const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, che
 
   return (
     <div className="w-full">
-        <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
+        <div className="flex flex-wrap items-baseline justify-start mb-2 gap-4">
             <h2 className="text-xl font-bold text-text-dark">Summary for {formattedDate}</h2>
             <input 
                 type="date"
