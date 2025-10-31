@@ -13,18 +13,28 @@ const getStatuses = async (req: VercelRequest, res: VercelResponse) => {
     const client = await pool.connect();
     try {
         // --- STEP 1: ทำให้ระบบเสถียร (ROBUSTNESS) ---
-        // ตรวจสอบและสร้างข้อมูลสถานะเริ่มต้นสำหรับห้องที่ยังไม่มีข้อมูล
-        // ทำให้ระบบทำงานได้ถูกต้องเสมอ แม้ข้อมูลเริ่มต้นใน DB จะไม่ครบ
-        const ensureStatusesQuery = `
-            INSERT INTO public.cleaning_statuses (room_id, status)
-            SELECT room_id, 'Clean' FROM public.rooms
-            ON CONFLICT (room_id) DO NOTHING;
+        // ใช้ LEFT JOIN เพื่อรับประกันว่าได้ข้อมูลครบทุกห้อง
+        // และสร้างข้อมูลสถานะเริ่มต้นสำหรับห้องที่ยังไม่มีข้อมูลไปพร้อมกัน
+        const ensureAndFetchQuery = `
+            WITH ensured_statuses AS (
+                INSERT INTO public.cleaning_statuses (room_id, status)
+                SELECT r.room_id, 'Clean' FROM public.rooms r
+                ON CONFLICT (room_id) DO NOTHING
+            )
+            SELECT 
+                cs.cleaning_status_id,
+                r.room_id,
+                COALESCE(cs.status, 'Clean') as status,
+                COALESCE(cs.last_updated, NOW()) as last_updated
+            FROM public.rooms r
+            LEFT JOIN public.cleaning_statuses cs ON r.room_id = cs.room_id
+            ORDER BY r.room_number;
         `;
-        await client.query(ensureStatusesQuery);
+        await client.query(ensureAndFetchQuery);
 
 
-        // --- STEP 2: AUTO-UPDATE LOGIC ---
-        // ค้นหาห้องทั้งหมดที่มีผู้เข้าพักอยู่ (พักค้างคืน) และเปลี่ยนสถานะเป็น "Needs Cleaning"
+        // --- STEP 2: AUTO-UPDATE LOGIC (IMPROVED) ---
+        // ค้นหาห้องทั้งหมดที่มีผู้เข้าพักอยู่ (พักค้างคืน)
         const today = new Date().toISOString().split('T')[0];
         
         const occupiedRoomsQuery = `
@@ -38,19 +48,31 @@ const getStatuses = async (req: VercelRequest, res: VercelResponse) => {
         const roomIdsToUpdate = occupiedRoomsResult.rows.map(r => r.room_id);
 
         if (roomIdsToUpdate.length > 0) {
+            // **THE DEFINITIVE FIX:**
+            // เพิ่มเงื่อนไข `AND status = 'Clean' AND DATE(last_updated) < CURRENT_DATE`
+            // เพื่อให้ระบบรีเซ็ตสถานะเป็น "Needs Cleaning" เพียงวันละครั้ง
+            // และจะไม่เขียนทับสถานะที่พนักงานเพิ่งอัปเดตในวันเดียวกัน
             const updateQuery = `
                 UPDATE public.cleaning_statuses 
                 SET status = 'Needs Cleaning', last_updated = NOW() 
-                WHERE room_id = ANY($1::int[]);
+                WHERE room_id = ANY($1::int[])
+                  AND status = 'Clean' 
+                  AND DATE(last_updated) < CURRENT_DATE;
             `;
             await client.query(updateQuery, [roomIdsToUpdate]);
         }
         
-        // --- STEP 3: ดึงข้อมูลและส่งกลับ ---
+        // --- STEP 3: ดึงข้อมูลล่าสุดและส่งกลับ ---
+        // ใช้ LEFT JOIN อีกครั้งเพื่อให้แน่ใจว่าข้อมูลที่ส่งกลับครบถ้วนสมบูรณ์เสมอ
         const fetchQuery = `
-            SELECT cleaning_status_id, room_id, status, last_updated 
-            FROM public.cleaning_statuses 
-            ORDER BY room_id;
+            SELECT 
+                cs.cleaning_status_id,
+                r.room_id,
+                COALESCE(cs.status, 'Clean') as status,
+                COALESCE(cs.last_updated, NOW()) as last_updated
+            FROM public.rooms r
+            LEFT JOIN public.cleaning_statuses cs ON r.room_id = cs.room_id
+            ORDER BY r.room_number;
         `;
         const { rows } = await client.query(fetchQuery);
         return res.status(200).json(rows);
