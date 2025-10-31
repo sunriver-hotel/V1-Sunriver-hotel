@@ -13,6 +13,7 @@ function App() {
   // Auth & Language State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [language, setLanguage] = useState<Language>('th');
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
   
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -30,6 +31,13 @@ function App() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalDefaults, setModalDefaults] = useState<{ checkInDate?: string; roomIds?: number[] }>({});
 
+  // Load logo from localStorage on initial render
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('hotelLogo');
+    if (savedLogo) {
+      setLogoSrc(savedLogo);
+    }
+  }, []);
 
   // Data Fetching Logic
   const fetchDashboardData = useCallback(async (date: Date) => {
@@ -88,6 +96,11 @@ function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentPage('dashboard'); // Reset to default page on logout
+  };
+
+  const handleLogoUpload = (logoDataUrl: string) => {
+    localStorage.setItem('hotelLogo', logoDataUrl);
+    setLogoSrc(logoDataUrl);
   };
 
   const handleOpenNewBookingModal = (checkInDate?: string, roomIds?: number[]) => {
@@ -161,6 +174,8 @@ function App() {
         onNavigate={setCurrentPage}
         onLogout={handleLogout}
         language={language}
+        logoSrc={logoSrc}
+        onLogoUpload={handleLogoUpload}
       />
       <div className="p-4 md:p-6 lg:p-8">
         {currentPage === 'dashboard' && (
@@ -229,6 +244,7 @@ function App() {
               onLoginSuccess={handleLoginSuccess} 
               language={language}
               setLanguage={setLanguage}
+              logoSrc={logoSrc}
             />
         </div>
       ) : (

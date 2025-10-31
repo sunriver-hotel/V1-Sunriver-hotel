@@ -8,6 +8,7 @@ interface LoginPageProps {
   onLoginSuccess: () => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  logoSrc: string | null;
 }
 
 const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => {
@@ -33,7 +34,7 @@ const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Langu
   );
 };
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -60,8 +61,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg m-4">
       <div className="text-center">
+        {logoSrc && <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-16 w-auto mb-4" />}
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
-        <p className="text-text-light mt-2">{t.welcomeMessage}</p>
       </div>
 
       <LanguageSelector language={language} setLanguage={setLanguage} />

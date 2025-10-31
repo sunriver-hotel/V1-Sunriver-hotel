@@ -1,6 +1,6 @@
 export const translations = {
   en: {
-    loginTitle: "Hotel Staff Login",
+    loginTitle: "Sunriver hotel",
     usernameLabel: "Username",
     passwordLabel: "Password",
     loginButton: "Login",
@@ -8,7 +8,7 @@ export const translations = {
     loginSuccess: "Login Successful!",
     logoutButton: "Logout",
     invalidCredentialsError: "Invalid username or password.",
-    welcomeMessage: "Welcome back!",
+    welcomeMessage: "Welcome!",
     thai: "ไทย",
     english: "English",
     
@@ -17,6 +17,7 @@ export const translations = {
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
     navCleaning: "Cleaning Status",
+    uploadLogo: "Upload Logo",
 
     // Dashboard
     dashboardTitle: "Booking Overview",
@@ -102,7 +103,7 @@ export const translations = {
     loadingStatuses: "Loading cleaning statuses...",
   },
   th: {
-    loginTitle: "เข้าสู่ระบบสำหรับพนักงาน",
+    loginTitle: "โรงแรมซันริเวอร์",
     usernameLabel: "ชื่อผู้ใช้",
     passwordLabel: "รหัสผ่าน",
     loginButton: "เข้าสู่ระบบ",
@@ -119,6 +120,7 @@ export const translations = {
     navRoomStatus: "สถานะห้องพัก",
     navStatistics: "Dashboard",
     navCleaning: "สถานะทำความสะอาด",
+    uploadLogo: "อัปโหลดโลโก้",
 
     // Dashboard
     dashboardTitle: "ภาพรวมการจอง",
