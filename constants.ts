@@ -129,6 +129,8 @@ export const translations = {
     thb: "THB",
     date: "on",
     authorizedSignature: "Authorized Signature",
+    checkInLabel: "Check in",
+    checkOutLabel: "Check out",
 
     hotelInfo: {
       name: "Sunriver Hotel Limited Partnership",
@@ -269,6 +271,8 @@ export const translations = {
     thb: "บาท",
     date: "วันที่",
     authorizedSignature: "ผู้มีอำนาจลงนาม",
+    checkInLabel: "เช็คอิน",
+    checkOutLabel: "เช็คเอาท์",
 
     hotelInfo: {
       name: "ห้างหุ้นส่วนจำกัด ซันริเวอร์โฮเทล",

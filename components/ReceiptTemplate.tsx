@@ -32,6 +32,25 @@ const calculateNights = (checkIn: string | null | undefined, checkOut: string | 
     return Math.max(1, Math.round(duration));
 };
 
+const formatDateDDMMYYYY = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+    try {
+        const [year, month, day] = dateString.split('-').map(Number);
+        // Using UTC to avoid timezone issues when constructing the date
+        const date = new Date(Date.UTC(year, month - 1, day));
+        if (isNaN(date.getTime())) return dateString; // Return original if invalid
+        
+        const d = date.getUTCDate().toString().padStart(2, '0');
+        const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        const y = date.getUTCFullYear();
+        
+        return `${d}/${m}/${y}`;
+    } catch (e) {
+        console.error("Error formatting date:", e);
+        return dateString; // Fallback to original string on error
+    }
+};
+
 const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, bookings, logoSrc, language, paymentMethod, paymentDate }) => {
     const t = translations[language];
 
@@ -122,7 +141,13 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         position: absolute; left: 0; top: 0; width: 100%; height: auto;
                         font-size: 10pt;
                     }
-                    @page { size: A4; margin: 2cm; }
+                    .signature-section-print-margin {
+                        margin-top: 4rem !important; /* Reduces space for better A4 fit */
+                    }
+                    @page { 
+                        size: A4; 
+                        margin: 1.8cm; /* Adjusted margin for better fit */
+                    }
                 }
                 `}
             </style>
@@ -135,7 +160,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                      </div>
                 </div>
                 <div className="flex-grow overflow-y-auto p-2 sm:p-4">
-                     <div id="receipt-printable" className="bg-white p-8 mx-auto flex flex-col" style={{ width: '21cm', minHeight: '29.7cm' }}>
+                     {/* FIX: Removed fixed width/height to allow browser to manage print layout */}
+                     <div id="receipt-printable" className="bg-white p-8 mx-auto flex flex-col min-h-[25cm]">
                         {/* Header */}
                         <header className="flex justify-between items-start pb-4">
                             <div>
@@ -200,7 +226,9 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                                             <td className="py-2 px-1 align-top">
                                                 {item.description}
                                                 <div className="text-gray-500 text-[9pt]">
-                                                   ({item.checkIn} - {item.checkOut})
+                                                    {t.checkInLabel}: {formatDateDDMMYYYY(item.checkIn)}
+                                                    <br/>
+                                                    {t.checkOutLabel}: {formatDateDDMMYYYY(item.checkOut)}
                                                 </div>
                                             </td>
                                             <td className="py-2 px-1 text-center align-top">{item.roomCount}</td>
@@ -242,7 +270,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         </section>
 
                         {/* Signature */}
-                        <section className="mt-24 flex justify-end">
+                        <section className="mt-24 signature-section-print-margin flex justify-end">
                             <div className="text-center text-xs w-56">
                                 <div className="border-b border-gray-500 mb-1 h-8"></div>
                                 <p>({t.authorizedSignature})</p>
