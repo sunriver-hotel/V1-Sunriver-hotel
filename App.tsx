@@ -29,13 +29,9 @@ function App() {
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   
-  // Statistics State (**FIX**: Decoupled from Dashboard)
-  const [statisticsMonth, setStatisticsMonth] = useState(new Date());
-  const [statisticsBookings, setStatisticsBookings] = useState<Booking[]>([]);
-  const [isStatisticsLoading, setIsStatisticsLoading] = useState(false);
-
-  // Receipt State
+  // **REFACTOR**: Single state for all bookings, used by Receipt and Statistics pages
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [isAllBookingsLoading, setIsAllBookingsLoading] = useState(false);
 
   // Cleaning State
   const [cleaningStatuses, setCleaningStatuses] = useState<CleaningStatus[]>([]);
@@ -45,7 +41,7 @@ function App() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalDefaults, setModalDefaults] = useState<{ checkInDate?: string; roomIds?: number[] }>({});
 
-  // **FIX:** Fetch logo from database as soon as the app loads, BEFORE login.
+  // Fetch logo from database as soon as the app loads
   useEffect(() => {
     const fetchLogo = async () => {
       setIsLogoLoading(true);
@@ -84,26 +80,6 @@ function App() {
     }
   }, [rooms]);
 
-  // **FIX**: Dedicated fetcher for statistics page
-  const fetchStatisticsData = useCallback(async (date: Date) => {
-    setIsStatisticsLoading(true);
-    setError(null);
-    try {
-        const roomsPromise = rooms.length > 0 ? Promise.resolve(rooms) : getRooms();
-        const bookingsPromise = getBookingsForMonth(date.getFullYear(), date.getMonth());
-        
-        const [roomsResult, bookingsResult] = await Promise.all([roomsPromise, bookingsPromise]);
-        
-        if (rooms.length === 0) setRooms(roomsResult);
-        setStatisticsBookings(bookingsResult);
-    } catch (err) {
-        setError('Failed to load statistics data. Please try again.');
-        console.error(err);
-    } finally {
-        setIsStatisticsLoading(false);
-    }
-  }, [rooms]);
-
   const fetchCleaningStatuses = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -122,8 +98,9 @@ function App() {
     }
   }, [rooms.length]);
 
-  const fetchReceiptData = useCallback(async () => {
-    setIsLoading(true);
+  // **REFACTOR**: Renamed and simplified. Fetches all bookings for Receipt AND Statistics pages.
+  const fetchAllBookingsData = useCallback(async () => {
+    setIsAllBookingsLoading(true);
     setError(null);
     try {
       const roomsPromise = rooms.length > 0 ? Promise.resolve(rooms) : getRooms();
@@ -134,10 +111,10 @@ function App() {
       if (rooms.length === 0) setRooms(roomsResult);
       setAllBookings(allBookingsResult);
     } catch (err) {
-      setError('Failed to load receipt data. Please try again.');
+      setError('Failed to load data. Please try again.');
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsAllBookingsLoading(false);
     }
   }, [rooms]);
   
@@ -146,15 +123,13 @@ function App() {
     if (isLoggedIn) {
         if (currentPage === 'cleaning') {
             fetchCleaningStatuses();
-        } else if (currentPage === 'receipt') {
-            fetchReceiptData();
-        } else if (currentPage === 'statistics') {
-            fetchStatisticsData(statisticsMonth);
+        } else if (currentPage === 'receipt' || currentPage === 'statistics') {
+            fetchAllBookingsData();
         } else { // dashboard and room-status use the same data
             fetchDashboardData(currentMonthDate);
         }
     }
-  }, [isLoggedIn, currentPage, fetchDashboardData, fetchCleaningStatuses, fetchReceiptData, fetchStatisticsData, currentMonthDate, statisticsMonth]);
+  }, [isLoggedIn, currentPage, fetchDashboardData, fetchCleaningStatuses, fetchAllBookingsData, currentMonthDate]);
   
   // Event Handlers
   const handleLoginSuccess = () => setIsLoggedIn(true);
@@ -211,8 +186,7 @@ function App() {
       await saveBooking(payload);
       handleCloseModal();
       // Refetch data for relevant pages after any save
-      if (currentPage === 'receipt') fetchReceiptData();
-      if (currentPage === 'statistics') fetchStatisticsData(statisticsMonth);
+      if (currentPage === 'receipt' || currentPage === 'statistics') fetchAllBookingsData();
       if (currentPage === 'dashboard' || currentPage === 'room-status') fetchDashboardData(currentMonthDate);
       
     } catch (err: any) {
@@ -226,8 +200,7 @@ function App() {
       await deleteBooking(bookingId);
       handleCloseModal();
       // Refetch data for relevant pages after any delete
-      if (currentPage === 'receipt') fetchReceiptData();
-      if (currentPage === 'statistics') fetchStatisticsData(statisticsMonth);
+      if (currentPage === 'receipt' || currentPage === 'statistics') fetchAllBookingsData();
       if (currentPage === 'dashboard' || currentPage === 'room-status') fetchDashboardData(currentMonthDate);
 
     } catch (err: any) {
@@ -283,10 +256,8 @@ function App() {
            <StatisticsPage
             language={language}
             rooms={rooms}
-            bookings={statisticsBookings}
-            currentMonth={statisticsMonth}
-            onMonthChange={setStatisticsMonth}
-            isLoading={isStatisticsLoading}
+            allBookings={allBookings}
+            isLoading={isAllBookingsLoading}
             error={error}
            />
         )}
@@ -306,7 +277,7 @@ function App() {
             language={language}
             logoSrc={logoSrc}
             bookings={allBookings}
-            isLoading={isLoading}
+            isLoading={isAllBookingsLoading}
             error={error}
            />
         )}

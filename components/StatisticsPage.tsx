@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Language, Room, Booking, RoomType } from '../types';
+import type { Language, Room, Booking } from '../types';
 import { translations } from '../constants';
 
 // --- Reusable Vertical Bar Chart Component ---
@@ -159,24 +159,27 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
 interface StatisticsPageProps {
   language: Language;
   rooms: Room[];
-  bookings: Booking[];
-  currentMonth: Date;
-  onMonthChange: (date: Date) => void;
+  allBookings: Booking[];
   isLoading: boolean;
   error: string | null;
 }
 
-type TimePeriod = 'daily' | 'monthly' | 'yearly';
+type OccupancyPeriod = 'daily' | 'monthly' | 'yearly';
+type PopularityPeriod = 'monthly' | 'yearly' | 'allTime';
 
-const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookings, currentMonth, onMonthChange, isLoading, error }) => {
+
+const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBookings, isLoading, error }) => {
   const t = translations[language];
-  const [occupancyPeriod, setOccupancyPeriod] = useState<TimePeriod>('daily');
-  const [popularityPeriod, setPopularityPeriod] = useState<TimePeriod>('monthly'); // **NEW**: State for popularity filter
-  const [selectedRoomType, setSelectedRoomType] = useState<RoomType | 'All'>('All');
+  
+  // Internal state for date management, decoupled from App state.
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const [occupancyPeriod, setOccupancyPeriod] = useState<OccupancyPeriod>('daily');
+  const [popularityPeriod, setPopularityPeriod] = useState<PopularityPeriod>('monthly');
 
   const handleMonthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const [year, month] = e.target.value.split('-').map(Number);
-    onMonthChange(new Date(year, month - 1, 1));
+    setCurrentMonth(new Date(year, month - 1, 1));
   };
   
   const selectedMonthString = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -187,106 +190,104 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth() + 1;
 
+    // Filter bookings relevant to the selected period to optimize calculations
+    const relevantBookings = allBookings.filter(booking => {
+        const checkInYear = new Date(booking.check_in_date).getFullYear();
+        if (occupancyPeriod === 'yearly') return true; // consider all bookings for yearly
+        return checkInYear === year; // for daily/monthly, only consider current year
+    });
+
     if (occupancyPeriod === 'daily') {
         const daysInMonth = new Date(year, month, 0).getDate();
         for (let i = 1; i <= daysInMonth; i++) {
-            const dateString = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-            dataMap.set(dateString, 0);
+            dataMap.set(String(i), 0);
         }
     } else if (occupancyPeriod === 'monthly') {
-        const selectedYear = year;
         for (let i = 0; i < 12; i++) {
-            const key = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
-            dataMap.set(key, 0);
+            dataMap.set(t.months[i].substring(0,3), 0);
         }
     }
 
-    bookings.forEach(booking => {
+    relevantBookings.forEach(booking => {
       const start = new Date(booking.check_in_date + 'T00:00:00Z');
       const end = new Date(booking.check_out_date + 'T00:00:00Z');
       let current = new Date(start);
 
       while (current < end) {
         const currentYear = current.getUTCFullYear();
-        const currentMonth = current.getUTCMonth() + 1;
-
-        if (occupancyPeriod === 'daily') {
-            const dateString = current.toISOString().split('T')[0];
-            if (dataMap.has(dateString)) {
-                dataMap.set(dateString, dataMap.get(dateString)! + 1);
-            }
-        } else if (occupancyPeriod === 'monthly') {
-            const selectedYear = year;
-            if (currentYear === selectedYear) {
-                const key = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-                if (dataMap.has(key)) {
-                    dataMap.set(key, dataMap.get(key)! + 1);
-                }
-            }
+        const currentMonth = current.getUTCMonth(); // 0-indexed
+        const currentDay = current.getUTCDate();
+        
+        if (occupancyPeriod === 'daily' && currentYear === year && currentMonth + 1 === month) {
+            const key = String(currentDay);
+            dataMap.set(key, (dataMap.get(key) || 0) + 1);
+        } else if (occupancyPeriod === 'monthly' && currentYear === year) {
+            const key = t.months[currentMonth].substring(0,3);
+            dataMap.set(key, (dataMap.get(key) || 0) + 1);
         } else if (occupancyPeriod === 'yearly') {
-            const yearKey = String(currentYear);
-            dataMap.set(yearKey, (dataMap.get(yearKey) || 0) + 1);
+            const key = String(currentYear);
+            dataMap.set(key, (dataMap.get(key) || 0) + 1);
         }
         current.setUTCDate(current.getUTCDate() + 1);
       }
     });
     
-    let sortedData = Array.from(dataMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-    
-    if(occupancyPeriod === 'daily') {
-        return sortedData.map(([date, value]) => ({
-            label: new Date(date + 'T00:00:00Z').getUTCDate().toString(),
-            value
-        }));
+    let sortedData = Array.from(dataMap.entries());
+
+    if (occupancyPeriod === 'yearly') {
+        sortedData = sortedData.sort((a,b) => a[0].localeCompare(b[0]));
     }
-    if (occupancyPeriod === 'monthly') {
-        return sortedData.map(([key, value]) => ({
-            label: t.months[parseInt(key.split('-')[1], 10) - 1].substring(0,3),
-            value
-        }));
+     if (occupancyPeriod === 'daily') {
+        sortedData = sortedData.sort((a,b) => parseInt(a[0],10) - parseInt(b[0],10));
     }
 
     return sortedData.map(([label, value]) => ({ label, value }));
-  }, [bookings, occupancyPeriod, currentMonth, t.months]);
+  }, [allBookings, occupancyPeriod, currentMonth, t.months]);
 
 
   // --- **FIX**: Data Processing for Room Popularity by Room Number ---
   const popularityData = useMemo(() => {
     const nightsByRoomNumber = new Map<string, number>();
-    
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth(); // 0-indexed
     
     let filterStart: Date, filterEnd: Date;
-    
-    if (popularityPeriod === 'daily') {
-        // For 'daily', use the entire selected month as the context
+    let periodBookings = allBookings;
+
+    if (popularityPeriod === 'monthly') {
         filterStart = new Date(Date.UTC(year, month, 1));
-        filterEnd = new Date(Date.UTC(year, month + 1, 0));
-    } else if (popularityPeriod === 'monthly') {
-        filterStart = new Date(Date.UTC(year, month, 1));
-        filterEnd = new Date(Date.UTC(year, month + 1, 0));
-    } else { // yearly
+        filterEnd = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
+    } else if (popularityPeriod === 'yearly') {
         filterStart = new Date(Date.UTC(year, 0, 1));
-        filterEnd = new Date(Date.UTC(year, 11, 31));
+        filterEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
     }
     
-    const filterStartTime = filterStart.getTime();
-    const filterEndTime = filterEnd.getTime();
+    if (popularityPeriod !== 'allTime') {
+        const filterStartTime = filterStart!.getTime();
+        const filterEndTime = filterEnd!.getTime();
+        periodBookings = allBookings.filter(b => {
+            const bookingStartTime = new Date(b.check_in_date + 'T00:00:00Z').getTime();
+            const bookingEndTime = new Date(b.check_out_date + 'T00:00:00Z').getTime();
+            return bookingStartTime < filterEndTime && bookingEndTime > filterStartTime;
+        });
+    }
 
-    bookings.forEach(booking => {
+    periodBookings.forEach(booking => {
         if (!booking.room || !booking.room.room_number) return;
 
         const bookingStart = new Date(booking.check_in_date + 'T00:00:00Z');
         const bookingEnd = new Date(booking.check_out_date + 'T00:00:00Z');
-        const bookingStartTime = bookingStart.getTime();
-        const bookingEndTime = bookingEnd.getTime();
-
-        const overlapStart = Math.max(filterStartTime, bookingStartTime);
-        const overlapEnd = Math.min(filterEndTime, bookingEndTime);
+        
+        let overlapStart = bookingStart;
+        let overlapEnd = bookingEnd;
+        
+        if(popularityPeriod !== 'allTime'){
+             overlapStart = new Date(Math.max(filterStart!.getTime(), bookingStart.getTime()));
+             overlapEnd = new Date(Math.min(filterEnd!.getTime(), bookingEnd.getTime()));
+        }
 
         if (overlapEnd > overlapStart) {
-            const nightsInPeriod = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24);
+            const nightsInPeriod = (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24);
             const roomNumber = booking.room.room_number;
             nightsByRoomNumber.set(roomNumber, (nightsByRoomNumber.get(roomNumber) || 0) + nightsInPeriod);
         }
@@ -299,10 +300,9 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
         }));
 
     return data.filter(item => item.value > 0).sort((a,b) => b.value - a.value);
-
-  }, [bookings, popularityPeriod, currentMonth]);
+  }, [allBookings, popularityPeriod, currentMonth]);
   
-  const PeriodButton: React.FC<{ value: TimePeriod, label: string, current: TimePeriod, setter: (p: TimePeriod) => void }> = ({ value, label, current, setter }) => {
+  const PeriodButton: React.FC<{ value: string, label: string, current: string, setter: (p: any) => void }> = ({ value, label, current, setter }) => {
     const isActive = current === value;
     return (
         <button
@@ -342,8 +342,8 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                 </div>
             </div>
             <div className="overflow-x-auto">
-                {/* **FIX**: Added min-width to the chart container to fix mobile layout bug */}
-                <div className="min-w-[600px]">
+                 {/* **FIX**: Removed min-width to make chart fully responsive on mobile */}
+                <div>
                     <VerticalBarChart data={occupancyData} title={t.occupancyStatistics} />
                 </div>
             </div>
@@ -355,9 +355,10 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                 <h2 className="text-xl font-semibold text-text-dark">{t.roomPopularity}</h2>
                  <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
-                       <PeriodButton value="daily" label={t.daily} current={popularityPeriod} setter={setPopularityPeriod} />
+                       {/* **FIX**: Updated filter options */}
                        <PeriodButton value="monthly" label={t.monthly} current={popularityPeriod} setter={setPopularityPeriod} />
                        <PeriodButton value="yearly" label={t.yearly} current={popularityPeriod} setter={setPopularityPeriod} />
+                       <PeriodButton value="allTime" label={t.allTime} current={popularityPeriod} setter={setPopularityPeriod} />
                     </div>
                  </div>
             </div>

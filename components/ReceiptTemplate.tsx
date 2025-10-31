@@ -243,9 +243,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                                             <td className="py-2 px-1 align-top">
                                                 {item.description}
                                                 <div className="text-gray-500 text-[9pt]">
-                                                    {t.checkInLabel}: {formatDateDDMMYYYY(item.checkIn)}
-                                                    <br/>
-                                                    {t.checkOutLabel}: {formatDateDDMMYYYY(item.checkOut)}
+                                                   Check in: {formatDateDDMMYYYY(item.checkIn)} - check out: {formatDateDDMMYYYY(item.checkOut)}
                                                 </div>
                                             </td>
                                             <td className="py-2 px-1 text-center align-top">{item.roomCount}</td>
