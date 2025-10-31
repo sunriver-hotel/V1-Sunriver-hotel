@@ -62,10 +62,18 @@ const CleaningStatusPage: React.FC<CleaningStatusPageProps> = ({ language, rooms
     }, [rooms, bookings, cleaningStatuses]);
 
     const handleUpdateClick = (roomId: number, currentStatus: 'Clean' | 'Needs Cleaning' | undefined) => {
-        if (currentStatus === 'Needs Cleaning') {
-            if(window.confirm(t.confirmCleanMessage)) {
-                onUpdateStatus(roomId, 'Clean');
-            }
+        // Prevent action if status is not determined
+        if (!currentStatus) return;
+
+        // Determine the new status and the appropriate confirmation message
+        const newStatus = currentStatus === 'Clean' ? 'Needs Cleaning' : 'Clean';
+        const message = newStatus === 'Clean'
+            ? t.confirmCleanMessage
+            : t.confirmNeedsCleaningMessage;
+
+        // Show confirmation dialog before proceeding
+        if (window.confirm(message)) {
+            onUpdateStatus(roomId, newStatus);
         }
     };
 
@@ -103,7 +111,8 @@ const CleaningStatusPage: React.FC<CleaningStatusPageProps> = ({ language, rooms
                 {combinedRoomData.map(data => {
                     const cleaningStatus = data.cleaning?.status;
                     const colors = getCleaningColors(cleaningStatus);
-                    const isClickable = cleaningStatus === 'Needs Cleaning';
+                    // A card is clickable if it has a cleaning status.
+                    const isClickable = !!cleaningStatus;
                     
                     const occupancyText = t[occupancyStatusKeyMap[data.occupancy.status]];
 
@@ -112,7 +121,7 @@ const CleaningStatusPage: React.FC<CleaningStatusPageProps> = ({ language, rooms
                             key={data.room.room_id}
                             onClick={() => handleUpdateClick(data.room.room_id, cleaningStatus)}
                             className={`p-4 rounded-lg shadow-sm border-l-4 ${colors.border} ${colors.cardBg}
-                                ${isClickable ? 'cursor-pointer transition-transform transform hover:scale-105 hover:shadow-md' : ''}
+                                ${isClickable ? 'cursor-pointer transition-transform transform hover:scale-105 hover:shadow-md' : 'cursor-default'}
                             `}
                         >
                             <div className="flex justify-between items-start">

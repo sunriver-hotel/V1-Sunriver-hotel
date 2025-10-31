@@ -97,6 +97,7 @@ export const translations = {
     updateToClean: "Mark as Cleaned",
     confirmCleanTitle: "Confirm Action",
     confirmCleanMessage: "Are you sure you want to mark this room as 'Cleaned'?",
+    confirmNeedsCleaningMessage: "Are you sure you want to mark this room as 'Needs Cleaning'?",
     loadingStatuses: "Loading cleaning statuses...",
   },
   th: {
@@ -197,6 +198,7 @@ export const translations = {
     updateToClean: "เปลี่ยนเป็นทำความสะอาดแล้ว",
     confirmCleanTitle: "ยืนยันการกระทำ",
     confirmCleanMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ทำความสะอาดแล้ว'?",
+    confirmNeedsCleaningMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ยังไม่ทำความสะอาด'?",
     loadingStatuses: "กำลังโหลดสถานะการทำความสะอาด...",
   }
 };
