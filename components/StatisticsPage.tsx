@@ -9,32 +9,47 @@ interface VerticalBarChartProps {
 }
 
 const VerticalBarChart: React.FC<VerticalBarChartProps> = ({ data, title }) => {
-    const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 0) || 1, [data]); // Use 1 to avoid division by zero on empty data
+    const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 0) || 1, [data]);
 
     if (data.length === 0) {
         return <div className="text-center text-text-light p-8">{`No data available for ${title}`}</div>;
     }
 
     return (
-        <div className="w-full h-64 sm:h-72 flex justify-around items-end gap-1 sm:gap-2 px-2 pt-4">
-            {data.map((item, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center justify-end h-full group relative text-center">
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full mb-2 w-max px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
-                        {item.label}: {item.value}
+        <div className="w-full h-64 sm:h-72 flex justify-around items-end gap-1 sm:gap-2 px-2 pt-8">
+            {data.map((item, index) => {
+                const barHeightPercent = (item.value / maxValue) * 100;
+                // Determine if label fits inside. Threshold can be ~15% of height for readability.
+                const isLabelInside = barHeightPercent > 15;
+
+                return (
+                    <div key={index} className="flex-1 flex flex-col items-center justify-end h-full group relative text-center">
+                        {/* Bar */}
+                        <div
+                            className="w-full bg-primary-yellow rounded-t-md hover:bg-opacity-80 transition-all duration-300 relative"
+                            style={{ height: `${barHeightPercent}%` }}
+                        >
+                             {/* Value Label - INSIDE */}
+                             {item.value > 0 && isLabelInside && (
+                                 <span className="absolute top-1 left-0 right-0 text-xs font-bold text-white">
+                                     {item.value}
+                                 </span>
+                             )}
+                        </div>
+                        {/* Value Label - OUTSIDE */}
+                        {item.value > 0 && !isLabelInside && (
+                             <span className="absolute text-xs font-bold text-text-dark" style={{ bottom: `calc(${barHeightPercent}% + 4px)` }}>
+                                 {item.value}
+                             </span>
+                        )}
+
+                        {/* Label */}
+                        <div className="text-[10px] sm:text-xs text-text-light mt-2 w-full truncate" title={item.label}>
+                            {item.label}
+                        </div>
                     </div>
-                    {/* Bar */}
-                    <div
-                        className="w-full bg-primary-yellow rounded-t-md hover:bg-opacity-80 transition-all duration-300"
-                        style={{ height: `${(item.value / maxValue) * 100}%` }}
-                    >
-                    </div>
-                    {/* Label */}
-                    <div className="text-[10px] sm:text-xs text-text-light mt-2 w-full truncate" title={item.label}>
-                        {item.label}
-                    </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 };
@@ -69,22 +84,62 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
     return `M ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} L 0 0`;
   };
 
-  let cumulativePercent = 0;
-
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-6 p-4">
-        <div className="w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
+        <div className="w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0 relative">
              <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)' }}>
-                {data.map((item, index) => {
-                    if (item.value <= 0) return null;
-                    const percent = item.value / totalValue;
-                    const pathData = getPathForSlice(cumulativePercent, percent);
-                    cumulativePercent += percent;
-                    return (
-                        <path key={index} d={pathData} fill={COLORS[index % COLORS.length]} />
-                    );
-                })}
+                {(() => {
+                    let cumulativePercent = 0;
+                    return data.map((item, index) => {
+                        if (item.value <= 0) return null;
+                        const percent = item.value / totalValue;
+                        const pathData = getPathForSlice(cumulativePercent, percent);
+                        cumulativePercent += percent;
+                        return (
+                            <path key={index} d={pathData} fill={COLORS[index % COLORS.length]} />
+                        );
+                    });
+                })()}
             </svg>
+            {/* Render labels on top of the SVG to avoid rotation issues with text */}
+            <div className="absolute inset-0">
+                <svg viewBox="-1 -1 2 2">
+                    {(() => {
+                        let cumulativePercentForLabel = 0;
+                        return data.map((item) => {
+                            if (item.value <= 0) return null;
+
+                            const percent = item.value / totalValue;
+                            // Calculate position for the label in the middle of the slice
+                            const midAngle = (cumulativePercentForLabel + percent / 2) * 2 * Math.PI - Math.PI / 2; // Adjust for starting at top
+                            
+                            const textX = Math.cos(midAngle) * 0.7;
+                            const textY = Math.sin(midAngle) * 0.7;
+
+                            cumulativePercentForLabel += percent;
+
+                            // Add text only if slice is big enough (e.g., > 5%)
+                            if (percent > 0.05) {
+                                return (
+                                    <text
+                                        key={item.label}
+                                        x={textX}
+                                        y={textY}
+                                        fill="#fff"
+                                        fontSize="0.12"
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                        dominantBaseline="central"
+                                    >
+                                        {item.value}
+                                    </text>
+                                );
+                            }
+                            return null;
+                        });
+                    })()}
+                </svg>
+            </div>
         </div>
         <ul className="w-full md:w-auto text-sm space-y-2">
             {data.map((item, index) => (
