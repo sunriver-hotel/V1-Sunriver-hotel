@@ -19,14 +19,15 @@ interface BookingModalProps {
   rooms: Room[];
   existingBooking: Booking | null;
   bookings: Booking[];
-  defaultCheckInDate: string | null;
+  defaultCheckInDate?: string | null;
+  preSelectedRoomIds?: number[] | null;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, onDelete, language, rooms, existingBooking, bookings, defaultCheckInDate }) => {
+const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, onDelete, language, rooms, existingBooking, bookings, defaultCheckInDate, preSelectedRoomIds }) => {
   const t = translations[language];
   
-  const getInitialState = (defaultDate: string | null) => {
-    const checkIn = defaultDate || formatDateForInput(new Date());
+  const getInitialState = () => {
+    const checkIn = defaultCheckInDate || formatDateForInput(new Date());
     
     const checkInUtc = new Date(checkIn + 'T00:00:00Z');
     const checkOutUtc = new Date(checkInUtc.getTime());
@@ -41,14 +42,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
       tax_id: '',
       check_in_date: checkIn,
       check_out_date: checkOut,
-      selectedRoomIds: [] as number[],
+      selectedRoomIds: preSelectedRoomIds || [],
       price_per_night: 800,
       status: 'Unpaid' as BookingStatus,
       deposit: 0,
     };
   };
 
-  const [formData, setFormData] = useState(getInitialState(defaultCheckInDate));
+  const [formData, setFormData] = useState(getInitialState());
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -69,10 +70,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
             deposit: existingBooking.deposit || 0,
           });
         } else {
-            setFormData(getInitialState(defaultCheckInDate));
+            setFormData(getInitialState());
         }
     }
-  }, [isOpen, existingBooking, defaultCheckInDate]);
+  }, [isOpen, existingBooking, defaultCheckInDate, preSelectedRoomIds]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

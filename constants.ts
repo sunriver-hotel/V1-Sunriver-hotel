@@ -12,6 +12,10 @@ export const translations = {
     thai: "ไทย",
     english: "English",
     
+    // Navbar
+    navDashboard: "Booking Overview",
+    navRoomStatus: "Room Status",
+
     // Dashboard
     dashboardTitle: "Booking Overview",
     totalRooms: "Total Rooms",
@@ -59,6 +63,16 @@ export const translations = {
     // Calendar
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+
+    // Room Status Page
+    roomStatusTitle: "Room Status",
+    selectDate: "Select Date",
+    sortBy: "Sort By:",
+    sortByRoomNumber: "Room No.",
+    sortByRoomType: "Room Type",
+    sortByBedType: "Bed Type",
+    statusVacant: "Vacant",
+    statusOccupied: "Occupied",
   },
   th: {
     loginTitle: "เข้าสู่ระบบสำหรับพนักงาน",
@@ -72,6 +86,10 @@ export const translations = {
     welcomeMessage: "ยินดีต้อนรับ!",
     thai: "ไทย",
     english: "English",
+
+    // Navbar
+    navDashboard: "ภาพรวมการจอง",
+    navRoomStatus: "สถานะห้องพัก",
 
     // Dashboard
     dashboardTitle: "ภาพรวมการจอง",
@@ -120,5 +138,15 @@ export const translations = {
     // Calendar
     months: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
     daysShort: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
+
+    // Room Status Page
+    roomStatusTitle: "สถานะห้องพัก",
+    selectDate: "เลือกวันที่",
+    sortBy: "เรียงตาม:",
+    sortByRoomNumber: "เลขห้อง",
+    sortByRoomType: "ประเภทห้อง",
+    sortByBedType: "ประเภทเตียง",
+    statusVacant: "ว่าง",
+    statusOccupied: "มีผู้เข้าพัก",
   }
 };
