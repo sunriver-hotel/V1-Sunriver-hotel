@@ -133,20 +133,54 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
                 }
+                /* --- DEFINITIVE PRINT STYLES --- */
                 @media print {
-                    body * { visibility: hidden; }
-                    .no-print { display: none; }
-                    #receipt-printable, #receipt-printable * { visibility: visible; }
+                    /* Hide everything by default */
+                    body * {
+                        visibility: hidden;
+                    }
+                    /* Hide elements specifically marked not for printing */
+                    .no-print {
+                        display: none !important;
+                    }
+                    /* Make only the printable area and its children visible */
+                    #receipt-printable, #receipt-printable * {
+                        visibility: visible;
+                    }
+
+                    /* Define A4 page size and margins */
+                    @page {
+                        size: A4;
+                        margin: 1.8cm;
+                    }
+                    
+                    /* Reset body styles for a clean print slate */
+                    body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background-color: #fff !important;
+                    }
+
+                    /* Position the printable area to fill the entire page */
                     #receipt-printable {
-                        position: absolute; left: 0; top: 0; width: 100%; height: auto;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: auto;
                         font-size: 10pt;
+
+                        /* Override all screen styles that cause layout breaks */
+                        min-height: auto !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
                     }
+                    
+                    /* Fine-tune spacing for elements within the receipt for better fit */
                     .signature-section-print-margin {
-                        margin-top: 4rem !important; /* Reduces space for better A4 fit */
-                    }
-                    @page { 
-                        size: A4; 
-                        margin: 1.8cm; /* Adjusted margin for better fit */
+                        margin-top: 4rem !important; /* Reduce space to prevent overflow */
                     }
                 }
                 `}
@@ -160,7 +194,6 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                      </div>
                 </div>
                 <div className="flex-grow overflow-y-auto p-2 sm:p-4">
-                     {/* FIX: Removed fixed width/height to allow browser to manage print layout */}
                      <div id="receipt-printable" className="bg-white p-8 mx-auto flex flex-col min-h-[25cm]">
                         {/* Header */}
                         <header className="flex justify-between items-start pb-4">
