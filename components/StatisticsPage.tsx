@@ -2,13 +2,13 @@ import React, { useState, useMemo } from 'react';
 import type { Language, Room, Booking, RoomType } from '../types';
 import { translations } from '../constants';
 
-// --- Reusable Bar Chart Component ---
-interface BarChartProps {
+// --- Reusable Horizontal Bar Chart Component ---
+interface HorizontalBarChartProps {
   data: { label: string; value: number }[];
   title: string;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
+const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({ data, title }) => {
     const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 0), [data]);
 
     if (data.length === 0) {
@@ -36,6 +36,64 @@ const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
             ))}
         </div>
     );
+};
+
+// --- Reusable Pie Chart Component ---
+interface PieChartProps {
+  data: { label: string; value: number }[];
+  title: string;
+}
+
+const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
+  if (data.length === 0) {
+    return <div className="text-center text-text-light p-8">{`No data available for ${title}`}</div>;
+  }
+  
+  const COLORS = ['#e6c872', '#a7c7e7', '#c1e1c1', '#d8b4fe', '#f2b5a3', '#ffc0cb', '#b2e2f2', '#fde2a3', '#d9d9f3', '#ffb3ba'];
+  
+  const totalValue = useMemo(() => data.reduce((sum, item) => sum + item.value, 0), [data]);
+
+  const getPathForSlice = (cumulativePercent: number, percent: number) => {
+    const startAngle = cumulativePercent * 2 * Math.PI;
+    const endAngle = (cumulativePercent + percent) * 2 * Math.PI;
+    
+    const startX = Math.cos(startAngle);
+    const startY = Math.sin(startAngle);
+    const endX = Math.cos(endAngle);
+    const endY = Math.sin(endAngle);
+
+    const largeArcFlag = percent > 0.5 ? 1 : 0;
+
+    return `M ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} L 0 0`;
+  };
+
+  let cumulativePercent = 0;
+
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-center gap-6 p-4">
+        <div className="w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
+             <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)' }}>
+                {data.map((item, index) => {
+                    const percent = item.value / totalValue;
+                    const pathData = getPathForSlice(cumulativePercent, percent);
+                    cumulativePercent += percent;
+                    return (
+                        <path key={index} d={pathData} fill={COLORS[index % COLORS.length]} />
+                    );
+                })}
+            </svg>
+        </div>
+        <ul className="w-full md:w-auto text-sm space-y-2">
+            {data.map((item, index) => (
+                <li key={index} className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-sm flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                    <span className="font-medium text-text-dark truncate">{item.label}:</span>
+                    <span className="text-text-light font-semibold ml-auto">{item.value}</span>
+                </li>
+            ))}
+        </ul>
+    </div>
+  );
 };
 
 
@@ -141,10 +199,10 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
         nights: nightsByRoom.get(room.room_id) || 0,
       }))
       .sort((a, b) => b.nights - a.nights)
-      .slice(0, 15) // Show top 15
+      .slice(0, 10) // Show top 10
       .map(item => ({
         label: `Room ${item.room.room_number}`,
-        value: item.nights,
+        value: Math.round(item.nights),
       }))
       .filter(item => item.value > 0); // Only show rooms that have been booked
 
@@ -178,7 +236,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                 </div>
             </div>
             <div className="overflow-x-auto">
-                <BarChart data={occupancyData} title={t.occupancyStatistics} />
+                <HorizontalBarChart data={occupancyData} title={t.occupancyStatistics} />
             </div>
         </div>
 
@@ -202,7 +260,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                  </div>
             </div>
              <div className="overflow-x-auto">
-                <BarChart data={popularityData} title={t.roomPopularity} />
+                <PieChart data={popularityData} title={t.roomPopularity} />
             </div>
         </div>
       </div>
