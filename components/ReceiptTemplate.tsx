@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { Language, Booking, RoomType, BedType } from '../types';
+import type { Language, Booking } from '../types';
 import { translations } from '../constants';
 
 interface ReceiptTemplateProps {
@@ -12,8 +12,11 @@ interface ReceiptTemplateProps {
     paymentDate: string;
 }
 
+// FIX: Added checkIn and checkOut to group items for displaying dates correctly
 interface GroupedItem {
     description: string;
+    checkIn: string;
+    checkOut: string;
     unitPrice: number;
     roomCount: number;
     nights: number;
@@ -24,6 +27,7 @@ interface GroupedItem {
 const calculateNights = (checkIn: string, checkOut: string): number => {
     const start = new Date(checkIn).getTime();
     const end = new Date(checkOut).getTime();
+    if (isNaN(start) || isNaN(end) || end <= start) return 1;
     const duration = (end - start) / (1000 * 60 * 60 * 24);
     return Math.max(1, Math.round(duration));
 };
@@ -38,7 +42,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
         year: 'numeric', month: 'long', day: 'numeric'
     });
 
-    // **FIX:** Logic to group bookings by room type, price, AND duration for correctness.
+    // **FIX:** Overhauled grouping logic to include check-in/out dates.
+    // This correctly separates bookings with different dates as per user requirements.
     const groupedItems = useMemo(() => {
         const itemsMap = new Map<string, GroupedItem>();
 
@@ -47,7 +52,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
             if (!room) return;
 
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            const key = `${room.room_type}-${room.bed_type}-${booking.price_per_night}-${nights}`;
+            // Key now includes dates to ensure unique line items for different stay periods.
+            const key = `${room.room_type}-${room.bed_type}-${booking.price_per_night}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
                 const existingItem = itemsMap.get(key)!;
@@ -69,6 +75,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                 
                 itemsMap.set(key, {
                     description,
+                    checkIn: booking.check_in_date,
+                    checkOut: booking.check_out_date,
                     unitPrice: booking.price_per_night,
                     roomCount: 1,
                     nights: nights,
@@ -119,8 +127,15 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         {/* Header */}
                         <header className="flex justify-between items-start pb-4">
                             <div>
-                                <h1 className="text-xl font-bold">{language === 'th' ? 'โรงแรมซันริเวอร์' : t.hotelInfo.name_secondary}</h1>
-                                <p className="text-sm font-semibold">{t.hotelInfo.name}</p>
+                                {language === 'th' ? (
+                                    <>
+                                        <h1 className="text-2xl font-bold">โรงแรมซันริเวอร์</h1>
+                                        <h2 className="text-xl font-bold">Sunriver Hotel</h2>
+                                    </>
+                                ) : (
+                                    <h1 className="text-2xl font-bold">{t.hotelInfo.name_secondary}</h1>
+                                )}
+                                <p className="text-sm font-semibold mt-2">{t.hotelInfo.name}</p>
                                 <p className="text-xs">{t.hotelInfo.address}</p>
                                 <p className="text-xs">{language === 'th' ? `โทรศัพท์: ${t.hotelInfo.phone.split(' ')[1]}` : t.hotelInfo.phone}</p>
                                 <p className="text-xs">{language === 'th' ? `อีเมล: ${t.hotelInfo.email.split(' ')[1]}` : t.hotelInfo.email}</p>
@@ -133,43 +148,48 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                             </div>
                         </header>
                         
-                        <div className="flex justify-between items-end pt-4 border-t-4 border-primary-yellow">
+                        <div className="flex justify-between items-end pt-4 pb-4 border-b border-yellow-500">
                              {/* Customer Info */}
                              <div className="text-xs w-2/3 space-y-1">
-                                <p><span className="font-bold w-24 inline-block">{t.customerInfo}:</span> {customer?.customer_name}</p>
-                                <p><span className="font-bold w-24 inline-block">{t.addressInfo}:</span> {customer?.address || ''}</p>
-                                <p><span className="font-bold w-24 inline-block">{t.telInfo}:</span> {customer?.phone}</p>
-                                {customer?.tax_id && <p><span className="font-bold w-24 inline-block">{t.taxIdInfo}:</span> {customer.tax_id}</p>}
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || ''}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone}</p>
+                                {customer?.tax_id && <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer.tax_id}</p>}
                             </div>
                             {/* Receipt Details */}
                             <div className="text-xs text-left w-1/3 pl-4">
                                 <div className="flex">
-                                    <span className="font-bold w-20 inline-block">{t.receiptNo}:</span>
+                                    <span className="font-bold w-24 inline-block">{language === 'th' ? 'เลขที่ใบเสร็จ' : 'Receipt No.'}:</span>
                                     <div>{bookings.map(b => <p key={b.booking_id}>{b.booking_id}</p>)}</div>
                                 </div>
                                 <div className="flex mt-1">
-                                    <span className="font-bold w-20 inline-block">{t.date}:</span> 
+                                    <span className="font-bold w-24 inline-block">{language === 'th' ? 'วันที่' : 'Date'}:</span> 
                                     <p>{printDate}</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Items Table */}
-                        <section className="mt-6">
+                        <section className="mt-2">
                             <table className="w-full text-xs table-auto">
                                 <thead className="border-y-2 border-black">
                                     <tr>
-                                        <th className="py-2 px-1 text-left font-bold w-[45%]">{t.description.toUpperCase()}</th>
-                                        <th className="py-2 px-1 text-center font-bold">{t.noOfRooms.toUpperCase()}</th>
-                                        <th className="py-2 px-1 text-center font-bold">{t.noOfNights.toUpperCase()}</th>
-                                        <th className="py-2 px-1 text-right font-bold">{t.unitPrice.toUpperCase()}</th>
-                                        <th className="py-2 px-1 text-right font-bold">{t.total.toUpperCase()}</th>
+                                        <th className="py-2 px-1 text-left font-bold w-[45%]">{language === 'th' ? 'รายการ' : 'DESCRIPTION'}</th>
+                                        <th className="py-2 px-1 text-center font-bold">{language === 'th' ? 'จำนวนห้องพัก' : 'NO. OF ROOMS'}</th>
+                                        <th className="py-2 px-1 text-center font-bold">{language === 'th' ? 'จำนวนวันที่เข้าพัก' : 'NO. OF NIGHTS'}</th>
+                                        <th className="py-2 px-1 text-right font-bold">{language === 'th' ? 'ราคาต่อห้อง' : 'UNIT PRICE (THB)'}</th>
+                                        <th className="py-2 px-1 text-right font-bold">{language === 'th' ? 'รวม' : 'TOTAL'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {groupedItems.map((item, index) => (
                                         <tr key={index} className="border-b">
-                                            <td className="py-2 px-1 align-top">{item.description}</td>
+                                            <td className="py-2 px-1 align-top">
+                                                {item.description}
+                                                <div className="text-gray-500 text-[9pt]">
+                                                   ({item.checkIn} - {item.checkOut})
+                                                </div>
+                                            </td>
                                             <td className="py-2 px-1 text-center align-top">{item.roomCount}</td>
                                             <td className="py-2 px-1 text-center align-top">{item.nights}</td>
                                             <td className="py-2 px-1 text-right align-top">{item.unitPrice.toFixed(2)}</td>
@@ -177,8 +197,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                                         </tr>
                                     ))}
                                     {/* Add empty rows to fill space */}
-                                    {Array.from({ length: Math.max(0, 10 - groupedItems.length) }).map((_, i) => (
-                                        <tr key={`empty-${i}`} className="border-b h-8"><td colSpan={5}></td></tr>
+                                    {Array.from({ length: Math.max(0, 8 - groupedItems.length) }).map((_, i) => (
+                                        <tr key={`empty-${i}`} className="border-b h-10"><td colSpan={5}></td></tr>
                                     ))}
                                 </tbody>
                             </table>
@@ -188,7 +208,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         <div className="flex-grow"></div>
 
                         {/* Remarks & Totals */}
-                        <section className="mt-auto pt-4">
+                        <section className="mt-auto pt-2">
                             <div className="flex justify-between items-start border-t-2 border-black pt-2">
                                 <div className="text-xs w-1/2">
                                     <p className="font-bold">{t.remarks}:</p>
@@ -205,14 +225,14 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         {/* Payment Info */}
                         <section className="mt-4 text-xs">
                             <p className="font-bold">{t.paymentInfo}:</p>
-                            <p>{paymentMethod === 'Cash' ? t.cashPayment : t.transferPayment} {totalAmount.toFixed(2)} {t.thb}, {t.date} {formattedPaymentDate}</p>
+                            <p>{paymentMethod === 'Cash' ? t.cashPayment : t.transferPayment}: {totalAmount.toFixed(2)} {t.thb}, {t.date} {formattedPaymentDate}</p>
                         </section>
 
                         {/* Signature */}
                         <section className="mt-24 flex justify-end">
                             <div className="text-center text-xs w-56">
                                 <div className="border-b border-gray-500 mb-1 h-8"></div>
-                                <p>{t.authorizedSignature}</p>
+                                <p>({t.authorizedSignature})</p>
                             </div>
                         </section>
 
