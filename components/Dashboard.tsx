@@ -11,14 +11,6 @@ interface DashboardProps {
   language: Language;
 }
 
-// Helper function to format date correctly, avoiding timezone shifts
-const formatDateForInput = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const t = translations[language];
   
@@ -26,8 +18,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    // Use UTC for all date state management to prevent timezone issues.
+    return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
   });
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -67,19 +59,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const goToPrevMonth = () => setCurrentMonthDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   const goToToday = () => {
     const today = new Date();
-    setCurrentMonthDate(today);
-    today.setHours(0,0,0,0);
-    setSelectedDate(today);
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    setCurrentMonthDate(new Date()); // Reset calendar view to current month
+    setSelectedDate(todayUTC);
   };
     const handleSummaryDateChange = (dateString: string) => {
+        // Input date string "YYYY-MM-DD" is timezone-agnostic. Treat it as UTC.
         const [year, month, day] = dateString.split('-').map(Number);
-        const newDate = new Date(year, month - 1, day);
-        newDate.setHours(0,0,0,0);
-        setSelectedDate(newDate);
+        const newDateUTC = new Date(Date.UTC(year, month - 1, day));
+        setSelectedDate(newDateUTC);
 
-        // Also update calendar if month/year is different
-        if (newDate.getFullYear() !== currentMonthDate.getFullYear() || newDate.getMonth() !== currentMonthDate.getMonth()) {
-            setCurrentMonthDate(newDate);
+        // Also update calendar view if month/year is different
+        const localDateForView = new Date(year, month - 1, day);
+        if (localDateForView.getFullYear() !== currentMonthDate.getFullYear() || localDateForView.getMonth() !== currentMonthDate.getMonth()) {
+            setCurrentMonthDate(localDateForView);
         }
     };
   
@@ -87,19 +80,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const occupancyMap = useMemo(() => {
     const map = new Map<string, number>();
     bookings.forEach(booking => {
-        // Parse date strings as UTC to avoid timezone issues.
         const [inYear, inMonth, inDay] = booking.check_in_date.split('-').map(Number);
         const [outYear, outMonth, outDay] = booking.check_out_date.split('-').map(Number);
         
-        // Create Date objects in UTC. Note: month is 0-indexed for Date.UTC.
         let current = new Date(Date.UTC(inYear, inMonth - 1, inDay));
         const end = new Date(Date.UTC(outYear, outMonth - 1, outDay));
 
         while (current < end) {
-            // toISOString() will correctly format the date part because the Date object is in UTC.
             const dateString = current.toISOString().split('T')[0];
             map.set(dateString, (map.get(dateString) || 0) + 1);
-            // Increment the day using UTC methods.
             current.setUTCDate(current.getUTCDate() + 1);
         }
     });
@@ -108,23 +97,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
 
   // Daily Summary Data Filtering
   const { checkIns, checkOuts, staying } = useMemo(() => {
+    // selectedDate is already in UTC. Format to YYYY-MM-DD string for comparison.
     const dateStr = selectedDate.toISOString().split('T')[0];
     const checkIns = bookings.filter(b => b.check_in_date === dateStr);
     const checkOuts = bookings.filter(b => b.check_out_date === dateStr);
+
+    const selectedTime = selectedDate.getTime(); // UTC timestamp
+
     const staying = bookings.filter(b => {
-      // Use UTC for comparison to match occupancyMap logic
-      const checkIn = new Date(Date.UTC(
-          parseInt(b.check_in_date.substring(0,4)),
-          parseInt(b.check_in_date.substring(5,7)) - 1,
-          parseInt(b.check_in_date.substring(8,10))
-      )).getTime();
-       const checkOut = new Date(Date.UTC(
-          parseInt(b.check_out_date.substring(0,4)),
-          parseInt(b.check_out_date.substring(5,7)) - 1,
-          parseInt(b.check_out_date.substring(8,10))
-      )).getTime();
-      const selected = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())).getTime();
-      return selected >= checkIn && selected < checkOut;
+      // Parse booking dates as UTC timestamps for accurate comparison
+      const checkInTime = new Date(b.check_in_date + 'T00:00:00Z').getTime();
+      const checkOutTime = new Date(b.check_out_date + 'T00:00:00Z').getTime();
+      return selectedTime >= checkInTime && selectedTime < checkOutTime;
     });
     return { checkIns, checkOuts, staying };
   }, [bookings, selectedDate]);
@@ -141,10 +125,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     setIsModalOpen(true);
   };
   
-  const handleCalendarDateClick = (date: Date) => {
+  const handleCalendarDateClick = (date: Date) => { // date is now UTC
     setSelectedDate(date);
-    // FIX: Use a timezone-safe formatter to prevent date from shifting by one day
-    setDefaultCheckInDate(formatDateForInput(date));
+    setDefaultCheckInDate(date.toISOString().split('T')[0]);
     setEditingBooking(null);
     setIsModalOpen(true);
   };
@@ -158,7 +141,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const handleSaveBooking = async (bookingData: Omit<Partial<Booking>, 'room_id' | 'booking_id'>, roomIds: number[]) => {
     try {
       let payload;
-      // For editing, we still handle it as a single booking update.
       if (editingBooking) {
         payload = {
           ...bookingData,
@@ -166,7 +148,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
           room_id: roomIds[0], // Editing only supports one room
         };
       } else {
-        // For creating, we send all roomIds in one request to prevent race conditions.
         payload = {
           ...bookingData,
           room_ids: roomIds,

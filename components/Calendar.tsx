@@ -31,19 +31,20 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      // สร้าง Date object ในระบบ UTC เพื่อให้ตรงกับ key ของ occupancyMap
+      // Create a Date object in UTC to match the occupancyMap keys and for reliable comparisons.
       const date = new Date(Date.UTC(year, month, day));
       const dateString = date.toISOString().split('T')[0];
       
       const occupiedRooms = occupancyMap.get(dateString) || 0;
       const availableRooms = totalRooms - occupiedRooms;
 
-      // สำหรับการเปรียบเทียบ isToday และ isSelected ต้องใช้ UTC ด้วย
+      // Use UTC dates for all comparisons to avoid timezone-related bugs.
       const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-      const selectedDateUTC = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()));
+      // selectedDate is now guaranteed to be a UTC date from the dashboard state.
+      const selectedTime = selectedDate.getTime();
 
       const isToday = date.getTime() === todayUTC.getTime();
-      const isSelected = date.getTime() === selectedDateUTC.getTime();
+      const isSelected = date.getTime() === selectedTime;
       
       const dayCellClasses = [
         "relative p-1 sm:p-2 border-r border-b border-gray-200 flex flex-col justify-start items-center cursor-pointer transition-colors duration-200",
@@ -56,10 +57,8 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
       ].join(' ');
       
       const handleDateSelect = () => {
-        // เมื่อเลือกวัน ให้ส่งค่ากลับเป็น Local time เพื่อให้ UI ส่วนอื่นทำงานถูกต้อง
-        const localDate = new Date(year, month, day);
-        localDate.setHours(0,0,0,0);
-        onDateSelect(localDate);
+        // Pass the UTC date object directly back to the dashboard.
+        onDateSelect(date);
       }
 
       days.push(

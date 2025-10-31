@@ -43,18 +43,20 @@ const SummarySection: React.FC<{ title: string; count: number; bookings: Booking
 
 const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, checkIns, checkOuts, staying, onEditBooking, onDateChange }) => {
   const t = translations[language];
+  // Add timeZone: 'UTC' to ensure the displayed date matches the selected UTC date, regardless of user's local timezone.
   const formattedDate = selectedDate.toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'UTC',
   });
 
-  // Helper to format date for the input[type=date]
+  // Helper to format date for the input[type=date], using UTC methods.
   const formatDateForInput = (date: Date) => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
