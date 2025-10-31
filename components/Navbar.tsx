@@ -12,17 +12,49 @@ interface NavbarProps {
     isLogoLoading: boolean;
 }
 
+// SVG Icon Components
+const DashboardIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+);
+
+const RoomStatusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H5v-2H3v-2h2v-2h2v-2h2v-2l1.257-.257A6 6 0 0115 7z" />
+    </svg>
+);
+
+const CleaningIcon = () => (
+     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+);
+
+const StatisticsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+);
+
+const ReceiptIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
+
 const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, language, logoSrc, onLogoUpload, isLogoLoading }) => {
     const t = translations[language];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const getButtonClasses = (page: Page) => {
-        const baseClasses = "py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow";
-        if (currentPage === page) {
-            return `${baseClasses} bg-primary-yellow text-white shadow-sm`;
-        }
-        return `${baseClasses} bg-white text-text-dark hover:bg-gray-100`;
-    };
+    const navItems = [
+        { id: 'dashboard', text: t.navDashboard, icon: DashboardIcon },
+        { id: 'room-status', text: t.navRoomStatus, icon: RoomStatusIcon },
+        { id: 'cleaning', text: t.navCleaning, icon: CleaningIcon },
+        { id: 'statistics', text: t.navStatistics, icon: StatisticsIcon },
+        { id: 'receipt', text: t.navReceipt, icon: ReceiptIcon },
+    ] as const;
 
     const handleLogoClick = () => {
         if (isLogoLoading) return;
@@ -46,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
         <header className="bg-white shadow-md sticky top-0 z-40">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-3">
-                    <div className="flex items-center flex-wrap gap-2 sm:gap-4">
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-3">
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -68,21 +100,20 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
                         </div>
                         
-                        <button onClick={() => onNavigate('dashboard')} className={getButtonClasses('dashboard')}>
-                            {t.navDashboard}
-                        </button>
-                        <button onClick={() => onNavigate('room-status')} className={getButtonClasses('room-status')}>
-                            {t.navRoomStatus}
-                        </button>
-                         <button onClick={() => onNavigate('cleaning')} className={getButtonClasses('cleaning')}>
-                            {t.navCleaning}
-                        </button>
-                        <button onClick={() => onNavigate('statistics')} className={getButtonClasses('statistics')}>
-                            {t.navStatistics}
-                        </button>
-                        <button onClick={() => onNavigate('receipt')} className={getButtonClasses('receipt')}>
-                            {t.navReceipt}
-                        </button>
+                        {navItems.map(item => {
+                            const isActive = currentPage === item.id;
+                            const buttonClasses = `flex items-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow ${
+                                isActive ? 'bg-primary-yellow text-white shadow-sm' : 'bg-white text-text-dark hover:bg-gray-100'
+                            }`;
+                            
+                            return (
+                                <button key={item.id} onClick={() => onNavigate(item.id)} className={buttonClasses}>
+                                    <item.icon />
+                                    <span className="hidden lg:inline">{item.text}</span>
+                                </button>
+                            );
+                        })}
+
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
