@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Language, Booking } from '../types';
 import { translations } from '../constants';
 import ReceiptTemplate from './ReceiptTemplate';
@@ -19,12 +19,18 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
     const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [showReceipt, setShowReceipt] = useState(false);
     
+    // When bookings data changes (e.g., after a search), ensure selected IDs are still valid
+    useEffect(() => {
+        const availableIds = new Set(bookings.map(b => b.booking_id));
+        setSelectedBookingIds(prev => prev.filter(id => availableIds.has(id)));
+    }, [bookings]);
+
     const filteredBookings = useMemo(() => {
-        const lowercasedTerm = searchTerm.toLowerCase();
+        const lowercasedTerm = searchTerm.toLowerCase().trim();
         if (!lowercasedTerm) {
-            return bookings.slice(0, 10); // Show latest 10 by default
+            // Sort by creation date to show the latest
+            return [...bookings].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
         }
-        // **FIX:** Add defensive checks (optional chaining `?.`) to prevent crashes on incomplete or null data.
         return bookings.filter(b => 
             (b.customer?.customer_name?.toLowerCase().includes(lowercasedTerm)) ||
             (b.customer?.phone?.includes(lowercasedTerm)) ||
@@ -38,7 +44,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
             if (prev.includes(bookingId)) {
                 return prev.filter(id => id !== bookingId);
             } else {
-                return [...prev, bookingId];
+                return [...prev, bookingId]; // Preserve selection order
             }
         });
     };
@@ -52,10 +58,9 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
     };
 
     const selectedBookings = useMemo(() => {
-        // **FIX:** Preserve the user's selection order.
-        // The first selected booking's customer info will be used for the receipt.
         if (selectedBookingIds.length === 0) return [];
         const bookingMap = new Map(bookings.map(b => [b.booking_id, b]));
+        // Return bookings in the order they were selected
         return selectedBookingIds.map(id => bookingMap.get(id)).filter((b): b is Booking => !!b);
     }, [selectedBookingIds, bookings]);
 
@@ -89,18 +94,25 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
                             <div key={booking.booking_id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
                                 <input
                                     type="checkbox"
+                                    id={`booking-${booking.booking_id}`}
                                     checked={selectedBookingIds.includes(booking.booking_id)}
                                     onChange={() => handleSelectBooking(booking.booking_id)}
-                                    className="h-5 w-5 rounded border-gray-300 text-primary-yellow focus:ring-primary-yellow"
+                                    className="h-5 w-5 rounded border-gray-300 text-primary-yellow focus:ring-primary-yellow cursor-pointer"
                                 />
-                                <div className="flex-grow">
-                                    <p className="font-semibold">{booking.customer?.customer_name} - <span className="font-normal text-text-light">{booking.room?.room_number}</span></p>
-                                    <p className="text-sm text-gray-500">{booking.booking_id} | {booking.customer?.phone}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-semibold">฿{booking.price_per_night.toFixed(2)}</p>
-                                    <p className="text-sm text-gray-500">{booking.check_in_date}</p>
-                                </div>
+                                <label htmlFor={`booking-${booking.booking_id}`} className="flex-grow grid grid-cols-2 md:grid-cols-3 gap-4 cursor-pointer">
+                                    <div>
+                                        <p className="font-semibold">{booking.customer?.customer_name}</p>
+                                        <p className="text-sm text-gray-500">{booking.booking_id}</p>
+                                    </div>
+                                    <div className="hidden md:block">
+                                        <p className="font-semibold text-text-light">{booking.room?.room_number}</p>
+                                        <p className="text-sm text-gray-500">{booking.customer?.phone}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">฿{booking.price_per_night.toFixed(2)}</p>
+                                        <p className="text-sm text-gray-500">{booking.check_in_date}</p>
+                                    </div>
+                                </label>
                             </div>
                         ))
                     ) : (

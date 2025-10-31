@@ -10,12 +10,8 @@ const pool = new Pool({
 });
 
 const getBookings = async (req: VercelRequest, res: VercelResponse) => {
-  const { year, month } = req.query;
+  const { year, month, all } = req.query;
   
-  if (!year || !month) {
-    return res.status(400).json({ message: 'Year and month query parameters are required.' });
-  }
-
   const baseQuery = `
       SELECT 
         b.booking_id, b.customer_id, b.room_id, 
@@ -41,6 +37,21 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
       JOIN public.customers c ON b.customer_id = c.customer_id
       JOIN public.rooms r ON b.room_id = r.room_id
   `;
+
+  if (all === 'true') {
+      try {
+          const query = `${baseQuery} ORDER BY b.created_at DESC`;
+          const { rows } = await pool.query(query);
+          return res.status(200).json(rows);
+      } catch (error) {
+          console.error('Get All Bookings Error:', error);
+          return res.status(500).json({ message: 'Internal Server Error' });
+      }
+  }
+
+  if (!year || !month) {
+    return res.status(400).json({ message: 'Year and month query parameters are required unless "all=true" is specified.' });
+  }
 
   try {
     const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));

@@ -4,10 +4,11 @@ import Dashboard from './components/Dashboard';
 import RoomStatusPage from './components/RoomStatusPage';
 import StatisticsPage from './components/StatisticsPage';
 import CleaningStatusPage from './components/CleaningStatusPage';
+import ReceiptPage from './components/ReceiptPage';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
 import type { Language, Page, Booking, Room, CleaningStatus } from './types';
-import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus, getLogo, saveLogo } from './services/bookingService';
+import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus, getLogo, saveLogo, getAllBookings } from './services/bookingService';
 
 function App() {
   // Auth & Language State
@@ -21,7 +22,8 @@ function App() {
 
   // Global Data State
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date()); // For calendar view
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]); // For dashboard
+  const [allBookings, setAllBookings] = useState<Booking[]>([]); // For receipts
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cleaningStatuses, setCleaningStatuses] = useState<CleaningStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,16 +90,40 @@ function App() {
         setIsLoading(false);
     }
   }, [rooms.length]);
+
+  const fetchReceiptData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+        if (rooms.length === 0) {
+            const roomsResult = await getRooms();
+            setRooms(roomsResult);
+        }
+        const bookingsResult = await getAllBookings();
+        setAllBookings(bookingsResult);
+    } catch (err) {
+        setError('Failed to load receipt data.');
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [rooms.length]);
   
+  const refetchData = useCallback(() => {
+    if (currentPage === 'cleaning') {
+        fetchCleaningStatuses();
+    } else if (currentPage === 'receipt') {
+        fetchReceiptData();
+    } else { // dashboard, room-status, statistics
+        fetchDashboardData(currentMonthDate);
+    }
+  }, [currentPage, fetchCleaningStatuses, fetchReceiptData, fetchDashboardData, currentMonthDate]);
+
   useEffect(() => {
     if (isLoggedIn) {
-        if (currentPage === 'cleaning') {
-            fetchCleaningStatuses();
-        } else {
-            fetchDashboardData(currentMonthDate);
-        }
+        refetchData();
     }
-  }, [isLoggedIn, currentMonthDate, fetchDashboardData, currentPage, fetchCleaningStatuses]);
+  }, [isLoggedIn, currentMonthDate, currentPage, refetchData]);
 
 
   // Event Handlers
@@ -154,8 +180,7 @@ function App() {
       }
       await saveBooking(payload);
       handleCloseModal();
-      // Refetch dashboard data after any save
-      fetchDashboardData(currentMonthDate);
+      refetchData();
     } catch (err: any) {
       alert(`Error saving booking(s): ${err.message}`);
       throw err;
@@ -166,8 +191,7 @@ function App() {
     try {
       await deleteBooking(bookingId);
       handleCloseModal();
-      // Refetch dashboard data after any delete
-      fetchDashboardData(currentMonthDate);
+      refetchData();
     } catch (err: any) {
       alert(`Error deleting booking: ${err.message}`);
       throw err;
@@ -231,6 +255,15 @@ function App() {
                 bookings={bookings}
                 cleaningStatuses={cleaningStatuses}
                 onUpdateStatus={handleUpdateCleaningStatus}
+                isLoading={isLoading}
+                error={error}
+            />
+        )}
+        {currentPage === 'receipt' && (
+            <ReceiptPage
+                language={language}
+                logoSrc={logoSrc}
+                bookings={allBookings}
                 isLoading={isLoading}
                 error={error}
             />

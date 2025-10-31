@@ -17,6 +17,7 @@ export const translations = {
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
     navCleaning: "Cleaning Status",
+    navReceipt: "Receipt",
     logoUploadTooltip: "Click to upload a new logo",
 
     // Dashboard
@@ -156,6 +157,7 @@ export const translations = {
     navRoomStatus: "สถานะห้องพัก",
     navStatistics: "Dashboard",
     navCleaning: "สถานะทำความสะอาด",
+    navReceipt: "ใบเสร็จ",
     logoUploadTooltip: "คลิกเพื่ออัปโหลดโลโก้ใหม่",
 
     // Dashboard
@@ -236,7 +238,7 @@ export const translations = {
     cleaned: "ทำความสะอาดแล้ว",
     needsCleaning: "ยังไม่ทำความสะอาด",
     updateToClean: "เปลี่ยนเป็นทำความสะอาดแล้ว",
-    confirmCleanTitle: "ยืนยันการกระทำ",
+    confirmCleanTitle: "ยืนยืนการกระทำ",
     confirmCleanMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ทำความสะอาดแล้ว'?",
     confirmNeedsCleaningMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ยังไม่ทำความสะอาด'?",
     loadingStatuses: "กำลังโหลดสถานะการทำความสะอาด...",

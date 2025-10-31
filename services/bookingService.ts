@@ -35,6 +35,22 @@ export const getBookingsForMonth = async (year: number, month: number): Promise<
 };
 
 /**
+ * Fetches all bookings from the API, without any date filters.
+ */
+export const getAllBookings = async (): Promise<Booking[]> => {
+    try {
+        const response = await fetch('/api/bookings?all=true');
+        if (!response.ok) {
+            throw new Error('Failed to fetch all bookings');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API call to getAllBookings failed:', error);
+        throw error;
+    }
+};
+
+/**
  * Creates or updates a booking. The payload shape differs for create vs. update.
  * For create, it expects `room_ids` array. For update, it expects a single `room_id`.
  * @param bookingData The booking data to save.
