@@ -223,11 +223,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold text-text-dark mb-4">{existingBooking ? t.editBooking : t.newBooking}</h2>
+      <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl sm:text-2xl font-bold text-text-dark mb-4">{existingBooking ? t.editBooking : t.newBooking}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md">
-            <h3 className="col-span-full font-semibold text-lg">{t.customerName}</h3>
+            <h3 className="col-span-full font-semibold text-base sm:text-lg">Customer Information</h3>
             <div>
               <label className="block text-sm font-medium text-text-dark">{t.customerName}</label>
               <input type="text" name="customer_name" value={formData.customer_name} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
@@ -251,7 +251,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
           </div>
           
            <div className="border p-4 rounded-md space-y-4">
-            <h3 className="font-semibold text-lg">Booking Information</h3>
+            <h3 className="font-semibold text-base sm:text-lg">Booking Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-dark">{t.checkInDate}</label>

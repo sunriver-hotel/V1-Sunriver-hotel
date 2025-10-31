@@ -51,8 +51,8 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
       ].join(' ');
       
       const dayNumberClasses = [
-        "text-sm font-semibold mb-1",
-        isToday ? "bg-primary-yellow text-white rounded-full h-6 w-6 flex items-center justify-center" : "text-text-dark"
+        "text-xs sm:text-sm font-semibold mb-1",
+        isToday ? "bg-primary-yellow text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center" : "text-text-dark"
       ].join(' ');
       
       const handleDateSelect = () => {
@@ -89,7 +89,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
     <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
       <div className="grid grid-cols-7 text-center font-medium text-text-light border-b border-gray-200">
         {t.daysShort.map(day => (
-          <div key={day} className="py-1 md:py-2 border-r border-gray-200 last:border-r-0 text-xs sm:text-base">{day}</div>
+          <div key={day} className="py-2 border-r border-gray-200 last:border-r-0 text-xs sm:text-sm">{day}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 grid-rows-6 flex-grow">

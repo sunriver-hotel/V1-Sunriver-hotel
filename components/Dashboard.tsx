@@ -194,13 +194,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
 
 
   return (
-    <div className="w-full h-screen bg-pastel-bg p-4 md:p-6 lg:p-8 flex flex-col">
+    <div className="w-full h-screen bg-pastel-bg p-4 md:p-6 lg:p-8 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">
         <h1 className="text-2xl md:text-3xl font-bold text-text-dark mb-4 md:mb-0">
           <i className="fas fa-home mr-2"></i>{t.dashboardTitle}
         </h1>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center flex-wrap justify-end gap-2 md:gap-4">
             <button
                 onClick={handleAddBooking}
                 className="py-2 px-4 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -233,21 +233,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col overflow-y-auto">
+      <main className="flex-grow flex flex-col overflow-y-auto min-h-0">
         <div className="flex-grow min-h-[400px]">
-          {isLoading ? (
+           {isLoading ? (
             <div className="flex justify-center items-center h-full"><p>{t.loadingBookings}</p></div>
           ) : error ? (
             <div className="flex justify-center items-center h-full"><p className="text-red-500">{error}</p></div>
           ) : (
-            <Calendar 
-              currentDate={currentMonthDate} 
-              selectedDate={selectedDate}
-              onDateSelect={handleCalendarDateClick}
-              language={language}
-              occupancyMap={occupancyMap}
-              totalRooms={rooms.length}
-            />
+            <div className="h-full overflow-x-auto pb-2">
+              <Calendar 
+                currentDate={currentMonthDate} 
+                selectedDate={selectedDate}
+                onDateSelect={handleCalendarDateClick}
+                language={language}
+                occupancyMap={occupancyMap}
+                totalRooms={rooms.length}
+              />
+            </div>
           )}
         </div>
         <DailySummary 

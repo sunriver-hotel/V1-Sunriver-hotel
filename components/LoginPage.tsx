@@ -60,7 +60,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg m-4">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
         <p className="text-text-light mt-2">{t.welcomeMessage}</p>
       </div>
 

@@ -18,7 +18,7 @@ const SummarySection: React.FC<{ title: string; count: number; bookings: Booking
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center text-left">
-        <h3 className="text-lg font-semibold text-text-dark">{title}</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-text-dark">{title}</h3>
         <span className="bg-primary-yellow text-white text-sm font-bold px-2 py-1 rounded-full">{count}</span>
       </button>
       {isOpen && (
@@ -61,7 +61,7 @@ const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, che
   return (
     <div className="w-full border-t-2 border-gray-200 mt-8 pt-8">
         <div className="flex flex-wrap items-baseline justify-start mb-4 gap-4">
-            <h2 className="text-xl font-bold text-text-dark">Summary for {formattedDate}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-text-dark">Summary for {formattedDate}</h2>
             <input 
                 type="date"
                 value={formatDateForInput(selectedDate)}
