@@ -4,12 +4,14 @@ import { translations } from '../constants';
 
 interface CalendarProps {
   currentDate: Date;
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
   language: Language;
   occupancyMap: Map<string, number>;
   totalRooms: number;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ currentDate, language, occupancyMap, totalRooms }) => {
+const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSelect, language, occupancyMap, totalRooms }) => {
   const t = translations[language];
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -24,24 +26,23 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, language, occupancyMap
 
   const renderDays = () => {
     const days = [];
-    // Add empty cells for days before the 1st of the month
     for (let i = 0; i < startDayOfWeek; i++) {
       days.push(<div key={`empty-${i}`} className="border-r border-b border-gray-200"></div>);
     }
 
-    // Add cells for each day of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
       const dateString = date.toISOString().split('T')[0];
       const occupiedRooms = occupancyMap.get(dateString) || 0;
       const availableRooms = totalRooms - occupiedRooms;
 
       const isToday = date.getTime() === today.getTime();
-      const isFull = availableRooms <= 0;
+      const isSelected = date.getTime() === selectedDate.getTime();
       
       const dayCellClasses = [
         "relative p-2 border-r border-b border-gray-200 flex flex-col justify-start items-start cursor-pointer transition-colors duration-200",
-        isFull ? "bg-red-100 hover:bg-red-200" : "hover:bg-yellow-50",
+        isSelected ? "bg-primary-yellow bg-opacity-20" : "hover:bg-yellow-50",
       ].join(' ');
       
       const dayNumberClasses = [
@@ -50,16 +51,21 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, language, occupancyMap
       ].join(' ');
 
       days.push(
-        <div key={day} className={dayCellClasses} onClick={() => alert(`Booking for ${dateString}`)}>
+        <div key={day} className={dayCellClasses} onClick={() => onDateSelect(date)}>
           <span className={dayNumberClasses}>{day}</span>
-          <div className="w-full text-center mt-auto">
-             {isFull ? (
-                <span className="text-xs font-bold text-red-600">เต็ม</span>
-             ) : (
+          <div className="w-full text-center mt-auto space-y-1">
+             <div className="flex items-center justify-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-xs font-bold text-green-600">
-                    {availableRooms} <span className="font-normal text-text-light">{t.available}</span>
+                    {availableRooms} <span className="font-normal text-text-light hidden md:inline">{t.vacant}</span>
                 </span>
-             )}
+             </div>
+             <div className="flex items-center justify-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span className="text-xs font-bold text-red-600">
+                    {occupiedRooms} <span className="font-normal text-text-light hidden md:inline">{t.booked}</span>
+                </span>
+             </div>
           </div>
         </div>
       );

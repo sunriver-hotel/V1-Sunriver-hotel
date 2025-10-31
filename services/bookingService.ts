@@ -1,59 +1,62 @@
-import type { Room, Booking, RoomType } from '../types';
+import type { Room, Booking } from '../types';
 
-const TOTAL_ROOMS = 24;
-const roomTypes: RoomType[] = ['Single', 'Double', 'Suite'];
-
-// Create a static list of 24 rooms
-const rooms: Room[] = Array.from({ length: TOTAL_ROOMS }, (_, i) => {
-    const roomNumber = (101 + i).toString();
-    const type = roomTypes[i % roomTypes.length];
-    return { id: i + 1, roomNumber, type };
-});
-
-export const getRooms = (): Room[] => {
-    return rooms;
+/**
+ * Fetches all rooms from the API.
+ */
+export const getRooms = async (): Promise<Room[]> => {
+  try {
+    const response = await fetch('/api/rooms');
+    if (!response.ok) {
+      throw new Error('Failed to fetch rooms');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API call to getRooms failed:', error);
+    throw error;
+  }
 };
 
-// Generates some mock bookings for a given month and year
-export const getMockBookings = (year: number, month: number): Booking[] => {
-    const bookings: Booking[] = [];
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    // Create a few random bookings to populate the calendar
-    for (let i = 0; i < TOTAL_ROOMS * 0.8; i++) {
-        const roomId = Math.floor(Math.random() * TOTAL_ROOMS) + 1;
-        const checkInDay = Math.floor(Math.random() * (daysInMonth - 3)) + 1;
-        const stayDuration = Math.floor(Math.random() * 5) + 1;
-        const checkOutDay = checkInDay + stayDuration;
-        
-        if (checkOutDay > daysInMonth) continue;
-
-        const checkInDate = new Date(year, month, checkInDay).toISOString().split('T')[0];
-        const checkOutDate = new Date(year, month, checkOutDay).toISOString().split('T')[0];
-
-        bookings.push({
-            id: `booking-${year}-${month}-${i}`,
-            roomId,
-            guestName: `Guest ${i + 1}`,
-            checkInDate,
-            checkOutDate,
-        });
+/**
+ * Fetches bookings for a specific month and year from the API.
+ * @param year The full year (e.g., 2024).
+ * @param month The month (0-indexed, 0 for January).
+ */
+export const getBookingsForMonth = async (year: number, month: number): Promise<Booking[]> => {
+    try {
+        const response = await fetch(`/api/bookings?year=${year}&month=${month + 1}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch bookings');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API call to getBookingsForMonth failed:', error);
+        throw error;
     }
+};
 
-    // Add a guaranteed full day for demonstration
-    const fullDay = Math.floor(Math.random() * 15) + 5;
-    for (let i = 0; i < TOTAL_ROOMS; i++) {
-         const checkInDate = new Date(year, month, fullDay).toISOString().split('T')[0];
-         const checkOutDate = new Date(year, month, fullDay + 1).toISOString().split('T')[0];
-         bookings.push({
-            id: `booking-full-${i}`,
-            roomId: i + 1,
-            guestName: `Full Day Guest ${i + 1}`,
-            checkInDate,
-            checkOutDate,
-        });
+/**
+ * Creates or updates a booking.
+ * @param bookingData The booking data to save.
+ */
+export const saveBooking = async (bookingData: Partial<Booking>): Promise<Booking> => {
+  const isEditing = !!bookingData.booking_id;
+  const url = isEditing ? `/api/bookings/${bookingData.booking_id}` : '/api/bookings';
+  const method = isEditing ? 'PUT' : 'POST';
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bookingData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to save booking');
     }
-
-
-    return bookings;
+    return await response.json();
+  } catch (error) {
+    console.error('API call to saveBooking failed:', error);
+    throw error;
+  }
 };

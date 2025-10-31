@@ -13,10 +13,44 @@ export const translations = {
     english: "English",
     
     // Dashboard
-    dashboardTitle: "Booking Calendar",
+    dashboardTitle: "Booking Overview",
     totalRooms: "Total Rooms",
     available: "Available",
+    vacant: "Vacant",
+    booked: "Booked",
     today: "Today",
+    addBooking: "Add Booking",
+    loadingBookings: "Loading booking data...",
+
+    // Daily Summary
+    checkIns: "Check-ins",
+    checkOuts: "Check-outs",
+    staying: "Staying",
+    noActivity: "No activity for this day.",
+
+    // Booking Modal
+    bookingDetails: "Booking Details",
+    editBooking: "Edit Booking",
+    newBooking: "New Booking",
+    customerName: "Customer Name",
+    phone: "Phone Number",
+    email: "Email (Optional)",
+    address: "Address (Optional)",
+    taxId: "Tax ID / ID Card (Optional)",
+    checkInDate: "Check-in Date",
+    checkOutDate: "Check-out Date",
+    room: "Room",
+    selectRoom: "Select a room",
+    pricePerNight: "Price per Night",
+    status: "Booking Status",
+    deposit: "Deposit (Optional)",
+    save: "Save",
+    cancel: "Cancel",
+    statuses: {
+      'Paid': 'Paid',
+      'Deposit': 'Deposit',
+      'Unpaid': 'Unpaid'
+    },
 
     // Calendar
     months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -36,11 +70,45 @@ export const translations = {
     english: "English",
 
     // Dashboard
-    dashboardTitle: "ปฏิทินการจองห้องพัก",
+    dashboardTitle: "ภาพรวมการจอง",
     totalRooms: "ห้องพักทั้งหมด",
     available: "ว่าง",
+    vacant: "ว่าง",
+    booked: "ถูกจองแล้ว",
     today: "วันนี้",
+    addBooking: "เพิ่มการจอง",
+    loadingBookings: "กำลังโหลดข้อมูลการจอง...",
 
+    // Daily Summary
+    checkIns: "เช็คอิน",
+    checkOuts: "เช็คเอาท์",
+    staying: "กำลังเข้าพัก",
+    noActivity: "ไม่มีกิจกรรมสำหรับวันนี้",
+
+    // Booking Modal
+    bookingDetails: "รายละเอียดการจอง",
+    editBooking: "แก้ไขการจอง",
+    newBooking: "การจองใหม่",
+    customerName: "ชื่อลูกค้า",
+    phone: "เบอร์โทรศัพท์",
+    email: "อีเมล (ไม่บังคับ)",
+    address: "ที่อยู่ (ไม่บังคับ)",
+    taxId: "เลขบัตรประชาชน / เลขผู้เสียภาษี (ไม่บังคับ)",
+    checkInDate: "วันที่เช็คอิน",
+    checkOutDate: "วันที่เช็คเอาท์",
+    room: "ห้อง",
+    selectRoom: "เลือกห้องพัก",
+    pricePerNight: "ราคาต่อคืน",
+    status: "สถานะการจอง",
+    deposit: "เงินมัดจำ (ไม่บังคับ)",
+    save: "บันทึก",
+    cancel: "ยกเลิก",
+    statuses: {
+      'Paid': 'ชำระแล้ว',
+      'Deposit': 'มัดจำ',
+      'Unpaid': 'ยังไม่ชำระ'
+    },
+    
     // Calendar
     months: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
     daysShort: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],

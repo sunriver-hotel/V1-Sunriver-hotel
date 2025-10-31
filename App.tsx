@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import LoginPage from './components/LoginPage';
-import DashboardPage from './components/SuccessPage';
+import Dashboard from './components/Dashboard';
 import type { Language } from './types';
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
           setLanguage={setLanguage}
         />
       ) : (
-        <DashboardPage 
+        <Dashboard
           onLogout={handleLogout}
           language={language}
         />

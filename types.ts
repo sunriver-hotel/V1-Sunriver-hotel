@@ -1,17 +1,38 @@
 export type Language = 'en' | 'th';
 
-export type RoomType = 'Single' | 'Double' | 'Suite';
+export type RoomType = 'River view' | 'Standard view' | 'Cottage';
+export type BedType = 'Double bed' | 'Twin bed';
+export type BookingStatus = 'Paid' | 'Deposit' | 'Unpaid';
+
 
 export interface Room {
-  id: number;
-  roomNumber: string;
-  type: RoomType;
+  room_id: number;
+  room_number: string;
+  room_type: RoomType;
+  bed_type: BedType;
+  floor: number;
+}
+
+export interface Customer {
+    customer_id: number;
+    customer_name: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    tax_id?: string;
 }
 
 export interface Booking {
-  id: string;
-  roomId: number;
-  guestName: string;
-  checkInDate: string; // YYYY-MM-DD
-  checkOutDate: string; // YYYY-MM-DD
+  booking_id: string;
+  customer_id: number;
+  room_id: number;
+  check_in_date: string; // YYYY-MM-DD
+  check_out_date: string; // YYYY-MM-DD
+  status: BookingStatus;
+  price_per_night: number;
+  deposit?: number;
+  created_at: string; // ISO string
+  // Joined data
+  customer?: Customer;
+  room?: Room;
 }
