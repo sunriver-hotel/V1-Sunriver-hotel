@@ -125,3 +125,45 @@ export const updateCleaningStatus = async (roomId: number, status: 'Clean' | 'Ne
     throw error;
   }
 };
+
+/**
+ * Fetches the application logo from the settings API.
+ */
+export const getLogo = async (): Promise<string | null> => {
+  try {
+    const response = await fetch('/api/settings');
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch logo');
+    }
+    const data = await response.json();
+    return data.logo; // API returns { logo: 'data:...' } or { logo: null }
+  } catch (error) {
+    console.error('API call to getLogo failed:', error);
+    // Don't throw here, as a missing logo is not a critical failure for the app.
+    // Let the UI handle the null state.
+    return null;
+  }
+};
+
+/**
+ * Saves the application logo via the settings API.
+ * @param logoDataUrl The base64 data URL of the logo image.
+ */
+export const saveLogo = async (logoDataUrl: string): Promise<void> => {
+  try {
+    const response = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'logo', value: logoDataUrl }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to save logo');
+    }
+  } catch (error) {
+    console.error('API call to saveLogo failed:', error);
+    throw error; // Re-throw to be caught by the UI component
+  }
+};

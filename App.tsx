@@ -7,7 +7,7 @@ import CleaningStatusPage from './components/CleaningStatusPage';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
 import type { Language, Page, Booking, Room, CleaningStatus } from './types';
-import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus } from './services/bookingService';
+import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus, getLogo, saveLogo } from './services/bookingService';
 
 function App() {
   // Auth & Language State
@@ -31,13 +31,18 @@ function App() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalDefaults, setModalDefaults] = useState<{ checkInDate?: string; roomIds?: number[] }>({});
 
-  // Load logo from localStorage on initial render
+  // Fetch logo from database on successful login
   useEffect(() => {
-    const savedLogo = localStorage.getItem('hotelLogo');
-    if (savedLogo) {
-      setLogoSrc(savedLogo);
+    const fetchLogo = async () => {
+      const savedLogo = await getLogo();
+      if (savedLogo) {
+        setLogoSrc(savedLogo);
+      }
+    };
+    if (isLoggedIn) {
+      fetchLogo();
     }
-  }, []);
+  }, [isLoggedIn]);
 
   // Data Fetching Logic
   const fetchDashboardData = useCallback(async (date: Date) => {
@@ -98,9 +103,13 @@ function App() {
     setCurrentPage('dashboard'); // Reset to default page on logout
   };
 
-  const handleLogoUpload = (logoDataUrl: string) => {
-    localStorage.setItem('hotelLogo', logoDataUrl);
-    setLogoSrc(logoDataUrl);
+  const handleLogoUpload = async (logoDataUrl: string) => {
+    try {
+        await saveLogo(logoDataUrl);
+        setLogoSrc(logoDataUrl); // Update UI immediately
+    } catch (err: any) {
+        alert(`Error saving logo: ${err.message}`);
+    }
   };
 
   const handleOpenNewBookingModal = (checkInDate?: string, roomIds?: number[]) => {
