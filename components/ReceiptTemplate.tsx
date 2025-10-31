@@ -12,6 +12,7 @@ interface ReceiptTemplateProps {
     paymentDate: string;
 }
 
+// FIX: Added checkIn and checkOut to group items for displaying dates correctly
 interface GroupedItem {
     description: string;
     checkIn: string;
@@ -22,6 +23,7 @@ interface GroupedItem {
     total: number;
 }
 
+// Helper function to calculate nights, ensuring it returns at least 1.
 const calculateNights = (checkIn: string, checkOut: string): number => {
     const start = new Date(checkIn).getTime();
     const end = new Date(checkOut).getTime();
@@ -29,8 +31,6 @@ const calculateNights = (checkIn: string, checkOut: string): number => {
     const duration = (end - start) / (1000 * 60 * 60 * 24);
     return Math.max(1, Math.round(duration));
 };
-
-const display = (value: string | undefined | null) => value || '-';
 
 const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, bookings, logoSrc, language, paymentMethod, paymentDate }) => {
     const t = translations[language];
@@ -42,6 +42,8 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
         year: 'numeric', month: 'long', day: 'numeric'
     });
 
+    // **FIX:** Overhauled grouping logic to include check-in/out dates.
+    // This correctly separates bookings with different dates as per user requirements.
     const groupedItems = useMemo(() => {
         const itemsMap = new Map<string, GroupedItem>();
 
@@ -50,6 +52,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
             if (!room) return;
 
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
+            // Key now includes dates to ensure unique line items for different stay periods.
             const key = `${room.room_type}-${room.bed_type}-${booking.price_per_night}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
@@ -107,7 +110,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         position: absolute; left: 0; top: 0; width: 100%; height: auto;
                         font-size: 10pt;
                     }
-                    @page { size: A4; margin: 1.5cm; }
+                    @page { size: A4; margin: 2cm; }
                 }
                 `}
             </style>
@@ -148,10 +151,10 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         <div className="flex justify-between items-end pt-4 pb-4 border-b border-yellow-500">
                              {/* Customer Info */}
                              <div className="text-xs w-2/3 space-y-1">
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {display(customer?.customer_name)}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {display(customer?.address)}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {display(customer?.phone)}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {display(customer?.tax_id)}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || ''}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone}</p>
+                                {customer?.tax_id && <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer.tax_id}</p>}
                             </div>
                             {/* Receipt Details */}
                             <div className="text-xs text-left w-1/3 pl-4">
@@ -201,6 +204,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                             </table>
                         </section>
                         
+                        {/* This div will grow to push the footer down */}
                         <div className="flex-grow"></div>
 
                         {/* Remarks & Totals */}

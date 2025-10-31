@@ -35,11 +35,11 @@ export const getBookingsForMonth = async (year: number, month: number): Promise<
 };
 
 /**
- * Fetches all bookings from the API, without any date filters.
+ * Fetches all bookings from the API.
  */
 export const getAllBookings = async (): Promise<Booking[]> => {
     try {
-        const response = await fetch('/api/bookings?all=true');
+        const response = await fetch(`/api/bookings?all=true`);
         if (!response.ok) {
             throw new Error('Failed to fetch all bookings');
         }
@@ -49,6 +49,7 @@ export const getAllBookings = async (): Promise<Booking[]> => {
         throw error;
     }
 };
+
 
 /**
  * Creates or updates a booking. The payload shape differs for create vs. update.
@@ -149,8 +150,9 @@ export const getLogo = async (): Promise<string | null> => {
   try {
     const response = await fetch('/api/settings');
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch logo');
+        // Log the server error but don't throw, allowing the UI to gracefully handle the missing logo.
+        console.error(`API call to getLogo failed with status: ${response.status}`);
+        return null;
     }
     const data = await response.json();
     return data.logo; // API returns { logo: 'data:...' } or { logo: null }
