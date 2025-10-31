@@ -67,16 +67,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const occupancyMap = useMemo(() => {
     const map = new Map<string, number>();
     bookings.forEach(booking => {
-        // Use UTC dates to avoid timezone issues. Append 'T00:00:00Z' to treat dates as UTC.
-        let current = new Date(booking.check_in_date + 'T00:00:00Z');
-        const end = new Date(booking.check_out_date + 'T00:00:00Z');
-        
-        // Loop through each day of the booking
-        while (current.getTime() < end.getTime()) {
+        let current = new Date(booking.check_in_date);
+        const end = new Date(booking.check_out_date);
+        while (current < end) {
             const dateString = current.toISOString().split('T')[0];
             map.set(dateString, (map.get(dateString) || 0) + 1);
-            // Increment the day in UTC
-            current.setUTCDate(current.getUTCDate() + 1);
+            current.setDate(current.getDate() + 1);
         }
     });
     return map;

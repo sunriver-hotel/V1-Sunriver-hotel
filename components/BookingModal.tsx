@@ -79,9 +79,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
   };
   
   const availableRooms = useMemo(() => {
-    // Use UTC dates to avoid timezone issues. Append 'T00:00:00Z' to treat dates as UTC.
-    const checkInTime = new Date(formData.check_in_date + 'T00:00:00Z').getTime();
-    const checkOutTime = new Date(formData.check_out_date + 'T00:00:00Z').getTime();
+    const checkInTime = new Date(formData.check_in_date).getTime();
+    const checkOutTime = new Date(formData.check_out_date).getTime();
 
     if (isNaN(checkInTime) || isNaN(checkOutTime) || checkInTime >= checkOutTime) {
       return rooms;
@@ -94,12 +93,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
             return;
         }
 
-        const bookingCheckInTime = new Date(booking.check_in_date + 'T00:00:00Z').getTime();
-        const bookingCheckOutTime = new Date(booking.check_out_date + 'T00:00:00Z').getTime();
+        const bookingCheckInTime = new Date(booking.check_in_date).getTime();
+        const bookingCheckOutTime = new Date(booking.check_out_date).getTime();
 
-        // Check for overlap:
-        // A new booking (checkInTime, checkOutTime) overlaps with an existing one (bookingCheckInTime, bookingCheckOutTime) if
-        // the new booking's start is before the existing one's end, AND the new booking's end is after the existing one's start.
+        // Check for overlap
         if (checkInTime < bookingCheckOutTime && checkOutTime > bookingCheckInTime) {
             bookedRoomIds.add(booking.room_id);
         }
