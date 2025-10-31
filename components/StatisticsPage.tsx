@@ -2,41 +2,43 @@ import React, { useState, useMemo } from 'react';
 import type { Language, Room, Booking, RoomType } from '../types';
 import { translations } from '../constants';
 
-// --- Reusable Horizontal Bar Chart Component ---
-interface HorizontalBarChartProps {
+// --- Reusable Vertical Bar Chart Component ---
+interface VerticalBarChartProps {
   data: { label: string; value: number }[];
   title: string;
 }
 
-const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({ data, title }) => {
-    const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 0), [data]);
+const VerticalBarChart: React.FC<VerticalBarChartProps> = ({ data, title }) => {
+    const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 0) || 1, [data]); // Use 1 to avoid division by zero on empty data
 
     if (data.length === 0) {
         return <div className="text-center text-text-light p-8">{`No data available for ${title}`}</div>;
     }
 
     return (
-        <div className="w-full space-y-3 p-4">
+        <div className="w-full h-64 sm:h-72 flex justify-around items-end gap-1 sm:gap-2 px-2 pt-4">
             {data.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 text-sm">
-                    <div className="w-24 sm:w-28 text-right font-medium text-text-dark truncate" title={item.label}>
-                        {item.label}
+                <div key={index} className="flex-1 flex flex-col items-center justify-end h-full group relative text-center">
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 w-max px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                        {item.label}: {item.value}
                     </div>
-                    <div className="flex-grow flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-6">
-                            <div
-                                className="bg-primary-yellow h-6 rounded-full flex items-center justify-end px-2"
-                                style={{ width: maxValue > 0 ? `${(item.value / maxValue) * 100}%` : '0%' }}
-                            >
-                               <span className="text-white font-bold text-xs">{item.value > 0 ? item.value : ''}</span>
-                            </div>
-                        </div>
+                    {/* Bar */}
+                    <div
+                        className="w-full bg-primary-yellow rounded-t-md hover:bg-opacity-80 transition-all duration-300"
+                        style={{ height: `${(item.value / maxValue) * 100}%` }}
+                    >
+                    </div>
+                    {/* Label */}
+                    <div className="text-[10px] sm:text-xs text-text-light mt-2 w-full truncate" title={item.label}>
+                        {item.label}
                     </div>
                 </div>
             ))}
         </div>
     );
 };
+
 
 // --- Reusable Pie Chart Component ---
 interface PieChartProps {
@@ -74,6 +76,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
         <div className="w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
              <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)' }}>
                 {data.map((item, index) => {
+                    if (item.value <= 0) return null;
                     const percent = item.value / totalValue;
                     const pathData = getPathForSlice(cumulativePercent, percent);
                     cumulativePercent += percent;
@@ -159,17 +162,19 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
       }
     });
     
-    const sortedData = Array.from(dataMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    let sortedData = Array.from(dataMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
     
     if(occupancyPeriod === 'daily') {
+        // For daily, we want descending order (most recent first)
+        sortedData = sortedData.reverse();
         return sortedData.map(([date, value]) => ({
-            label: new Date(date + 'T00:00:00Z').toLocaleDateString(language, { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+            label: new Date(date + 'T00:00:00Z').toLocaleDateString(language, { day: 'numeric', timeZone: 'UTC' }),
             value
-        })).reverse();
+        }));
     }
     if (occupancyPeriod === 'monthly') {
         return sortedData.map(([key, value]) => ({
-            label: t.months[parseInt(key.split('-')[1], 10) - 1],
+            label: t.months[parseInt(key.split('-')[1], 10) - 1].substring(0,3),
             value
         }));
     }
@@ -236,7 +241,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                 </div>
             </div>
             <div className="overflow-x-auto">
-                <HorizontalBarChart data={occupancyData} title={t.occupancyStatistics} />
+                <VerticalBarChart data={occupancyData} title={t.occupancyStatistics} />
             </div>
         </div>
 
