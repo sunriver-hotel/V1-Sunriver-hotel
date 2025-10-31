@@ -113,24 +113,26 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
   const t = translations[language];
   const [occupancyPeriod, setOccupancyPeriod] = useState<OccupancyPeriod>('daily');
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | 'All'>('All');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   // --- Data Processing for Occupancy Statistics ---
   const occupancyData = useMemo(() => {
     const dataMap = new Map<string, number>();
-    
+    const [year, month] = selectedMonth.split('-').map(Number);
+
     if (occupancyPeriod === 'daily') {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      for (let i = 0; i < 30; i++) {
-        const date = new Date(today);
-        date.setUTCDate(today.getUTCDate() - i);
-        const dateString = date.toISOString().split('T')[0];
-        dataMap.set(dateString, 0);
-      }
+        const daysInMonth = new Date(year, month, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateString = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            dataMap.set(dateString, 0);
+        }
     } else if (occupancyPeriod === 'monthly') {
-        const currentYear = new Date().getFullYear();
-        for(let i = 0; i < 12; i++) {
-            const key = `${currentYear}-${String(i+1).padStart(2, '0')}`;
+        const selectedYear = year;
+        for (let i = 0; i < 12; i++) {
+            const key = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
             dataMap.set(key, 0);
         }
     }
@@ -141,22 +143,25 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
       let current = new Date(start);
 
       while (current < end) {
+        const currentYear = current.getUTCFullYear();
+        const currentMonth = current.getUTCMonth() + 1;
+
         if (occupancyPeriod === 'daily') {
-          const dateString = current.toISOString().split('T')[0];
-          if (dataMap.has(dateString)) {
-            dataMap.set(dateString, dataMap.get(dateString)! + 1);
-          }
+            const dateString = current.toISOString().split('T')[0];
+            if (dataMap.has(dateString)) {
+                dataMap.set(dateString, dataMap.get(dateString)! + 1);
+            }
         } else if (occupancyPeriod === 'monthly') {
-            const currentYear = new Date().getFullYear();
-            if(current.getUTCFullYear() === currentYear) {
-                const key = `${current.getUTCFullYear()}-${String(current.getUTCMonth() + 1).padStart(2, '0')}`;
+            const selectedYear = year;
+            if (currentYear === selectedYear) {
+                const key = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
                 if (dataMap.has(key)) {
                     dataMap.set(key, dataMap.get(key)! + 1);
                 }
             }
         } else if (occupancyPeriod === 'yearly') {
-            const year = String(current.getUTCFullYear());
-            dataMap.set(year, (dataMap.get(year) || 0) + 1);
+            const yearKey = String(currentYear);
+            dataMap.set(yearKey, (dataMap.get(yearKey) || 0) + 1);
         }
         current.setUTCDate(current.getUTCDate() + 1);
       }
@@ -165,10 +170,8 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     let sortedData = Array.from(dataMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
     
     if(occupancyPeriod === 'daily') {
-        // For daily, we want descending order (most recent first)
-        sortedData = sortedData.reverse();
         return sortedData.map(([date, value]) => ({
-            label: new Date(date + 'T00:00:00Z').toLocaleDateString(language, { day: 'numeric', timeZone: 'UTC' }),
+            label: new Date(date + 'T00:00:00Z').getUTCDate().toString(),
             value
         }));
     }
@@ -180,7 +183,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     }
 
     return sortedData.map(([label, value]) => ({ label, value }));
-  }, [bookings, occupancyPeriod, language, t.months]);
+  }, [bookings, occupancyPeriod, selectedMonth, t.months]);
 
 
   // --- Data Processing for Room Popularity ---
@@ -234,10 +237,21 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
         <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
                 <h2 className="text-xl font-semibold text-text-dark">{t.occupancyStatistics}</h2>
-                <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
-                    <PeriodButton value="daily" label={t.daily} />
-                    <PeriodButton value="monthly" label={t.monthly} />
-                    <PeriodButton value="yearly" label={t.yearly} />
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {(occupancyPeriod === 'daily' || occupancyPeriod === 'monthly') && (
+                        <input
+                            type="month"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            className="px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow text-sm"
+                            aria-label={t.selectMonth}
+                        />
+                    )}
+                    <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
+                        <PeriodButton value="daily" label={t.daily} />
+                        <PeriodButton value="monthly" label={t.monthly} />
+                        <PeriodButton value="yearly" label={t.yearly} />
+                    </div>
                 </div>
             </div>
             <div className="overflow-x-auto">

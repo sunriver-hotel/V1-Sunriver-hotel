@@ -89,6 +89,7 @@ export const translations = {
     filterByRoomType: "Filter by Room Type:",
     allTypes: "All Types",
     totalNightsBooked: "Total Nights Booked",
+    selectMonth: "Select Month",
 
     // Cleaning Status Page
     cleaningStatusTitle: "Room Cleaning Status",
@@ -190,6 +191,7 @@ export const translations = {
     filterByRoomType: "กรองตามประเภทห้อง:",
     allTypes: "ทุกประเภท",
     totalNightsBooked: "จำนวนคืนที่เข้าพักทั้งหมด",
+    selectMonth: "เลือกเดือน",
 
     // Cleaning Status Page
     cleaningStatusTitle: "สถานะการทำความสะอาดห้อง",
