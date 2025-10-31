@@ -36,7 +36,9 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
     if (!isOpen || bookings.length === 0) return null;
 
-    const customer = bookings[0].customer;
+    // FIX 1: Safely access customer. It might be null or undefined on the booking object.
+    const customer = bookings[0]?.customer;
+
     const printDate = new Date().toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
@@ -92,9 +94,13 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
     }, [bookings, language]);
     
     const totalAmount = groupedItems.reduce((sum, item) => sum + item.total, 0);
-    const formattedPaymentDate = new Date(paymentDate + 'T00:00:00Z').toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
-        year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
-    });
+    
+    // FIX 3: Safely format payment date, handling cases where it might be empty or invalid.
+    const formattedPaymentDate = paymentDate
+        ? new Date(paymentDate + 'T00:00:00Z').toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
+            year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+          })
+        : '-';
 
 
     return (
@@ -131,19 +137,20 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         {/* Header */}
                         <header className="flex justify-between items-start pb-4">
                             <div>
+                                {/* FIX 2: Safely access all hotel info properties. */}
                                 {language === 'th' ? (
                                     <>
-                                        <h1 className="text-2xl font-bold">โรงแรมซันริเวอร์</h1>
-                                        <h2 className="text-xl font-bold">Sunriver Hotel</h2>
+                                        <h1 className="text-2xl font-bold">{t.loginTitle}</h1>
+                                        <h2 className="text-xl font-bold">{t.hotelInfo?.name_secondary || 'Sunriver Hotel'}</h2>
                                     </>
                                 ) : (
-                                    <h1 className="text-2xl font-bold">{t.hotelInfo.name_secondary}</h1>
+                                    <h1 className="text-2xl font-bold">{t.hotelInfo?.name_secondary || 'Sunriver Hotel'}</h1>
                                 )}
-                                <p className="text-sm font-semibold mt-2">{t.hotelInfo.name}</p>
-                                <p className="text-xs">{t.hotelInfo.address}</p>
-                                <p className="text-xs">{language === 'th' ? `โทรศัพท์: ${t.hotelInfo.phone.split(' ')[1]}` : t.hotelInfo.phone}</p>
-                                <p className="text-xs">{language === 'th' ? `อีเมล: ${t.hotelInfo.email.split(' ')[1]}` : t.hotelInfo.email}</p>
-                                <p className="text-xs">{language === 'th' ? `เลขที่ผู้เสียภาษี: ${t.hotelInfo.taxId.split(' ')[1]}` : t.hotelInfo.taxId}</p>
+                                <p className="text-sm font-semibold mt-2">{t.hotelInfo?.name || '-'}</p>
+                                <p className="text-xs">{t.hotelInfo?.address || '-'}</p>
+                                <p className="text-xs">{language === 'th' ? `โทรศัพท์: ${t.hotelInfo?.phone?.split(' ')[1] || '-'}` : t.hotelInfo?.phone || '-'}</p>
+                                <p className="text-xs">{language === 'th' ? `อีเมล: ${t.hotelInfo?.email?.split(' ')[1] || '-'}` : t.hotelInfo?.email || '-'}</p>
+                                <p className="text-xs">{language === 'th' ? `เลขที่ผู้เสียภาษี: ${t.hotelInfo?.taxId?.split(' ')[1] || '-'}` : t.hotelInfo?.taxId || '-'}</p>
                             </div>
                             <div className="text-right flex-shrink-0">
                                 {logoSrc && <img src={logoSrc} alt="Logo" className="h-20 w-auto object-contain ml-auto mb-2"/>}
@@ -153,7 +160,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         </header>
                         
                         <div className="flex justify-between items-end pt-4 pb-4 border-b border-yellow-500">
-                             {/* Customer Info */}
+                             {/* Customer Info (now safe due to `customer` variable fix) */}
                              <div className="text-xs w-2/3 space-y-1">
                                 <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name || '-'}</p>
                                 <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || '-'}</p>
@@ -242,7 +249,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
                         {/* Footer */}
                         <footer className="mt-8 text-center text-[8pt] text-gray-500 border-t pt-2">
-                             <p>{t.hotelInfo.address}</p>
+                             <p>{t.hotelInfo?.address || '-'}</p>
                         </footer>
                      </div>
                 </div>
