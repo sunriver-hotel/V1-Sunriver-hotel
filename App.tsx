@@ -15,6 +15,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [language, setLanguage] = useState<Language>('th');
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(false);
   
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -36,9 +37,16 @@ function App() {
   // Fetch logo from database on successful login
   useEffect(() => {
     const fetchLogo = async () => {
-      const savedLogo = await getLogo();
-      if (savedLogo) {
-        setLogoSrc(savedLogo);
+      setIsLogoLoading(true);
+      try {
+        const savedLogo = await getLogo();
+        if (savedLogo) {
+          setLogoSrc(savedLogo);
+        }
+      } catch (err) {
+        console.error("Failed to fetch logo", err);
+      } finally {
+        setIsLogoLoading(false);
       }
     };
     if (isLoggedIn) {
@@ -123,11 +131,14 @@ function App() {
   };
 
   const handleLogoUpload = async (logoDataUrl: string) => {
+    setIsLogoLoading(true);
     try {
         await saveLogo(logoDataUrl);
         setLogoSrc(logoDataUrl); // Update UI immediately
     } catch (err: any) {
         alert(`Error saving logo: ${err.message}`);
+    } finally {
+        setIsLogoLoading(false);
     }
   };
 
@@ -211,6 +222,7 @@ function App() {
         language={language}
         logoSrc={logoSrc}
         onLogoUpload={handleLogoUpload}
+        isLogoLoading={isLogoLoading}
       />
       <div className="p-4 md:p-6 lg:p-8">
         {currentPage === 'dashboard' && (
@@ -290,6 +302,7 @@ function App() {
               setLanguage={setLanguage}
               logoSrc={logoSrc}
               onLogoUpload={handleLogoUpload}
+              isLogoLoading={isLogoLoading}
             />
         </div>
       ) : (

@@ -10,6 +10,7 @@ interface LoginPageProps {
   setLanguage: (lang: Language) => void;
   logoSrc: string | null;
   onLogoUpload: (logoDataUrl: string) => void;
+  isLogoLoading: boolean;
 }
 
 const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => {
@@ -35,7 +36,7 @@ const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Langu
   );
 };
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc, onLogoUpload }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc, onLogoUpload, isLogoLoading }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -61,6 +62,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   };
   
   const handleLogoClick = () => {
+    if (isLogoLoading) return;
     fileInputRef.current?.click();
   };
 
@@ -90,17 +92,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
         />
         <div
             onClick={handleLogoClick}
-            className="cursor-pointer group relative inline-block mb-4"
-            title={t.logoUploadTooltip}
+            className={`group relative inline-block mb-4 ${isLogoLoading ? 'cursor-wait' : 'cursor-pointer'}`}
+            title={!isLogoLoading ? t.logoUploadTooltip : undefined}
         >
             {logoSrc ? (
-                <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-20 w-20 rounded-full object-cover" />
+                <img src={logoSrc} alt="Hotel Logo" className={`mx-auto h-20 w-20 rounded-full object-cover transition-opacity ${isLogoLoading ? 'opacity-50' : 'opacity-100'}`} />
             ) : (
-                <div className="mx-auto h-20 w-20 rounded-full bg-primary-yellow"></div>
+                <div className={`mx-auto h-20 w-20 rounded-full bg-primary-yellow ${isLogoLoading ? 'animate-pulse' : ''}`}></div>
             )}
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
+        <p className="text-xs text-gray-400 mt-4">Version 1.0.0</p>
       </div>
 
       <LanguageSelector language={language} setLanguage={setLanguage} />

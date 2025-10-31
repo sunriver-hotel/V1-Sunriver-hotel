@@ -9,9 +9,10 @@ interface NavbarProps {
     language: Language;
     logoSrc: string | null;
     onLogoUpload: (logoDataUrl: string) => void;
+    isLogoLoading: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, language, logoSrc, onLogoUpload }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, language, logoSrc, onLogoUpload, isLogoLoading }) => {
     const t = translations[language];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
     };
 
     const handleLogoClick = () => {
+        if (isLogoLoading) return;
         fileInputRef.current?.click();
     };
 
@@ -55,13 +57,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                         />
                         <div
                             onClick={handleLogoClick}
-                            className="cursor-pointer group relative"
-                            title={t.logoUploadTooltip}
+                            className={`group relative ${isLogoLoading ? 'cursor-wait' : 'cursor-pointer'}`}
+                            title={!isLogoLoading ? t.logoUploadTooltip : undefined}
                         >
                             {logoSrc ? (
-                                <img src={logoSrc} alt="Logo" className="h-10 w-10 rounded-full object-cover" />
+                                <img src={logoSrc} alt="Logo" className={`h-10 w-10 rounded-full object-cover transition-opacity ${isLogoLoading ? 'opacity-50' : 'opacity-100'}`} />
                             ) : (
-                                <div className="h-10 w-10 rounded-full bg-primary-yellow"></div>
+                                <div className={`h-10 w-10 rounded-full bg-primary-yellow ${isLogoLoading ? 'animate-pulse' : ''}`}></div>
                             )}
                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
                         </div>
