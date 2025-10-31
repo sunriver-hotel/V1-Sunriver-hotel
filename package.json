@@ -14,19 +14,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/bcrypt": "^5.0.2",
-    "@types/pg": "^8.11.6",
+    "@vitejs/plugin-react": "^4.3.0",
     "bcrypt": "^5.1.1",
     "pg": "^8.11.5",
     "react": "^19.0.0-rc-f994737d14-20240522",
-    "react-dom": "^19.0.0-rc-f994737d14-20240522"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vercel/node": "^3.2.0",
-    "@vitejs/plugin-react": "^4.3.0",
+    "react-dom": "^19.0.0-rc-f994737d14-20240522",
     "typescript": "^5.4.5",
     "vite": "^5.2.11"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/pg": "^8.11.6",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vercel/node": "^3.2.0"
   }
 }
