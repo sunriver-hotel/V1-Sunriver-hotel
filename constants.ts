@@ -17,7 +17,6 @@ export const translations = {
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
     navCleaning: "Cleaning Status",
-    navReceipt: "Receipt",
     logoUploadTooltip: "Click to upload a new logo",
 
     // Dashboard
@@ -103,42 +102,32 @@ export const translations = {
     confirmNeedsCleaningMessage: "Are you sure you want to mark this room as 'Needs Cleaning'?",
     loadingStatuses: "Loading cleaning statuses...",
 
+    // FIX: Added missing translation keys for ReceiptPage and ReceiptTemplate
     // Receipt Page
-    receiptTitle: "Receipt / Tax Invoice",
-    searchBookings: "Search by name, phone, check-in date, or booking ID...",
-    latestBookings: "Latest 10 Bookings",
+    receiptTitle: "Create Receipt",
+    searchBookings: "Search bookings by name, phone, booking ID...",
     searchResults: "Search Results",
-    selectBookings: "Select bookings to include in the receipt.",
-    noBookingsFound: "No bookings found.",
+    latestBookings: "Latest Bookings",
+    pleaseSelectBookings: "Please select at least one booking to create a receipt.",
+    noBookingsFound: "No bookings found matching your search.",
     paymentDetails: "Payment Details",
     paymentMethod: "Payment Method",
     paymentDate: "Payment Date",
     cash: "Cash",
     transfer: "Bank Transfer",
     createReceipt: "Create Receipt",
-    pleaseSelectBookings: "Please select at least one booking.",
     
-    // --- New Receipt Template Fields ---
-    receipt: "RECEIPT",
-    receiptNo: "Receipt No.",
-    date: "Date",
-    customerInfo: "Customer Name",
-    addressInfo: "Address",
-    telInfo: "Tel. No.",
-    taxIdInfo: "Tax ID",
-    description: "Description",
-    noOfRooms: "No. of rooms",
-    noOfNights: "No. of Nights",
-    unitPrice: "Unit price (THB)",
-    total: "Total",
+    // Receipt Template
+    receipt: "Receipt",
+    print: "Print",
     remarks: "Remarks",
-    totalAmount: "Total Amount (THB)",
-    paymentInfo: "Payment information",
-    cashPayment: "Cash",
-    transferPayment: "Transfer",
+    totalAmount: "Total Amount",
+    paymentInfo: "Payment Information",
+    cashPayment: "Paid by cash amounting to",
+    transferPayment: "Paid by bank transfer amounting to",
     thb: "THB",
+    date: "on",
     authorizedSignature: "Authorized Signature",
-    print: "Print / Save as PDF",
 
     hotelInfo: {
       name: "Sunriver Hotel Limited Partnership",
@@ -167,7 +156,6 @@ export const translations = {
     navRoomStatus: "สถานะห้องพัก",
     navStatistics: "Dashboard",
     navCleaning: "สถานะทำความสะอาด",
-    navReceipt: "ใบเสร็จ",
     logoUploadTooltip: "คลิกเพื่ออัปโหลดโลโก้ใหม่",
 
     // Dashboard
@@ -252,44 +240,34 @@ export const translations = {
     confirmCleanMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ทำความสะอาดแล้ว'?",
     confirmNeedsCleaningMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ยังไม่ทำความสะอาด'?",
     loadingStatuses: "กำลังโหลดสถานะการทำความสะอาด...",
-
+    
+    // FIX: Added missing translation keys for ReceiptPage and ReceiptTemplate
     // Receipt Page
-    receiptTitle: "ใบเสร็จรับเงิน / ใบกำกับภาษี",
-    searchBookings: "ค้นหาจากชื่อ, เบอร์โทร, วันที่เช็คอิน, หรือรหัสการจอง...",
-    latestBookings: "10 รายการล่าสุด",
+    receiptTitle: "สร้างใบเสร็จ",
+    searchBookings: "ค้นหาการจองด้วยชื่อ, เบอร์โทร, เลขที่การจอง...",
     searchResults: "ผลการค้นหา",
-    selectBookings: "เลือกรายการเพื่อรวมในใบเสร็จ",
-    noBookingsFound: "ไม่พบข้อมูลการจอง",
-    paymentDetails: "ข้อมูลการชำระเงิน",
+    latestBookings: "การจองล่าสุด",
+    pleaseSelectBookings: "กรุณาเลือกการจองอย่างน้อยหนึ่งรายการเพื่อสร้างใบเสร็จ",
+    noBookingsFound: "ไม่พบการจองที่ตรงกับการค้นหา",
+    paymentDetails: "รายละเอียดการชำระเงิน",
     paymentMethod: "วิธีการชำระเงิน",
     paymentDate: "วันที่ชำระเงิน",
     cash: "เงินสด",
-    transfer: "โอน",
+    transfer: "โอนผ่านธนาคาร",
     createReceipt: "สร้างใบเสร็จ",
-    pleaseSelectBookings: "กรุณาเลือกอย่างน้อย 1 รายการ",
 
-    // --- New Receipt Template Fields ---
+    // Receipt Template
     receipt: "ใบเสร็จรับเงิน",
-    receiptNo: "เลขที่ใบเสร็จ",
-    date: "วันที่",
-    customerInfo: "ชื่อลูกค้า",
-    addressInfo: "ที่อยู่",
-    telInfo: "โทรศัพท์",
-    taxIdInfo: "เลขที่ผู้เสียภาษี",
-    description: "รายการ",
-    noOfRooms: "จำนวนห้องพัก",
-    noOfNights: "จำนวนวันที่เข้าพัก",
-    unitPrice: "ราคาต่อห้อง",
-    total: "รวม",
+    print: "พิมพ์",
     remarks: "หมายเหตุ",
-    totalAmount: "รวมเงินทั้งหมด (บาท)",
+    totalAmount: "ยอดรวมทั้งสิ้น",
     paymentInfo: "ข้อมูลการชำระเงิน",
-    cashPayment: "เงินสด",
-    transferPayment: "เงินโอน",
+    cashPayment: "ชำระด้วยเงินสดเป็นจำนวนเงิน",
+    transferPayment: "ชำระโดยการโอนผ่านธนาคารเป็นจำนวนเงิน",
     thb: "บาท",
+    date: "วันที่",
     authorizedSignature: "ผู้มีอำนาจลงนาม",
-    print: "พิมพ์ / บันทึกเป็น PDF",
-    
+
     hotelInfo: {
       name: "ห้างหุ้นส่วนจำกัด ซันริเวอร์โฮเทล",
       name_secondary: "Sunriver Hotel",

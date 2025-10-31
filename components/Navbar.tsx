@@ -80,9 +80,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                         <button onClick={() => onNavigate('statistics')} className={getButtonClasses('statistics')}>
                             {t.navStatistics}
                         </button>
-                        <button onClick={() => onNavigate('receipt')} className={getButtonClasses('receipt')}>
-                            {t.navReceipt}
-                        </button>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
