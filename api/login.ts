@@ -22,13 +22,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ดึงข้อมูล username และ password จาก body ของ request ที่ส่งมาจาก Frontend
   const { username, password } = req.body;
 
-  // เพิ่มบัญชีผู้ใช้ชั่วคราวสำหรับ Preview ซึ่งจะทำงานเฉพาะในสภาพแวดล้อมที่ไม่ใช่ Production
-  // Vercel จะตั้งค่า VERCEL_ENV เป็น 'production', 'preview', หรือ 'development'
-  if (process.env.VERCEL_ENV !== 'production' && username === 'preview' && password === 'preview123') {
-    console.log('Preview user login successful.');
-    return res.status(200).json({ success: true });
-  }
-
   // ตรวจสอบข้อมูลเบื้องต้น
   if (!username || !password) {
     return res.status(400).json({ success: false, message: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' });
