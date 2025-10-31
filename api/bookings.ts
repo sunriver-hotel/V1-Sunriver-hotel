@@ -88,12 +88,12 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         const createdBookings = [];
         // Loop through all selected rooms and create a booking for each
         for (const room_id of room_ids) {
-            // **THE FIX:** We no longer generate the booking_id in the application code.
-            // We rely on the database's DEFAULT value which uses the `generate_booking_id()` function.
-            // This is the safest way to handle concurrent requests.
+            // **THE DEFINITIVE FIX:** Explicitly call the `generate_booking_id()` function in the INSERT statement.
+            // This is more robust than relying on a DEFAULT value which can be unreliable in some serverless environments.
+            // It ensures the function is called for every insert, solving the race condition permanently.
             const bookingQuery = `
-                INSERT INTO public.bookings (customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
+                VALUES (generate_booking_id(), $1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
             `;
             const bookingResult = await client.query(bookingQuery, [customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
@@ -105,10 +105,13 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Create Booking Error:', error);
-        // The error might be because the user hasn't run the ALTER TABLE command yet.
-        // We can provide a more specific error message if we detect a NULL booking_id error.
+
+        // Add more specific error handling to help diagnose DB-side issues.
+        if (error instanceof Error && (error.message.includes('function generate_booking_id() does not exist') || error.message.includes('relation "booking_seq" does not exist'))) {
+             return res.status(500).json({ message: 'The database function or sequence for generating Booking IDs is missing. Please ensure `booking_seq` and `generate_booking_id` are created.' });
+        }
         if (error instanceof Error && error.message.includes('null value in column "booking_id"')) {
-             return res.status(500).json({ message: 'Database is not configured to auto-generate Booking IDs. Please run the ALTER TABLE command.' });
+             return res.status(500).json({ message: 'Database is not configured to auto-generate Booking IDs. Please ensure the function and sequence are set up correctly.' });
         }
         return res.status(500).json({ message: 'Internal Server Error' });
     } finally {
