@@ -24,12 +24,12 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
         if (!lowercasedTerm) {
             return bookings.slice(0, 10); // Show latest 10 by default
         }
-        // **FIX:** Add defensive checks (optional chaining) to prevent crashes on incomplete data.
+        // **FIX:** Add defensive checks (optional chaining `?.`) to prevent crashes on incomplete or null data.
         return bookings.filter(b => 
             (b.customer?.customer_name?.toLowerCase().includes(lowercasedTerm)) ||
             (b.customer?.phone?.includes(lowercasedTerm)) ||
-            (b.booking_id.toLowerCase().includes(lowercasedTerm)) ||
-            (b.check_in_date.includes(lowercasedTerm))
+            (b.booking_id?.toLowerCase().includes(lowercasedTerm)) ||
+            (b.check_in_date?.includes(lowercasedTerm))
         );
     }, [searchTerm, bookings]);
 
