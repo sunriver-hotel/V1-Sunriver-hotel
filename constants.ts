@@ -144,7 +144,7 @@ export const translations = {
       name: "Sunriver Hotel Limited Partnership",
       name_secondary: "Sunriver Hotel",
       address: "215 Moo 1, Apibanbancha Rd, Tha Uthen, Nakhon Phanom 48120",
-      phone: "Tel: +66 93-152-9564",
+      phone: "Tel: 093-152-9564",
       email: "Email: sunriver.thauthen@gmail.com",
       taxId: "Tax ID: 0483568000055"
     },
