@@ -22,7 +22,7 @@ function App() {
 
   // Global Data State
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date()); // For calendar view
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]); // For dashboard month view
   const [allBookings, setAllBookings] = useState<Booking[]>([]); // For receipt page
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cleaningStatuses, setCleaningStatuses] = useState<CleaningStatus[]>([]);
@@ -34,6 +34,7 @@ function App() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalDefaults, setModalDefaults] = useState<{ checkInDate?: string; roomIds?: number[] }>({});
 
+  // **FIX:** Fetch logo from database as soon as the app loads, BEFORE login.
   useEffect(() => {
     const fetchLogo = async () => {
       setIsLogoLoading(true);
@@ -90,35 +91,36 @@ function App() {
     }
   }, [rooms.length]);
 
-  const fetchAllBookings = useCallback(async () => {
+  const fetchReceiptData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      if (rooms.length === 0) {
-        const roomsResult = await getRooms();
-        setRooms(roomsResult);
-      }
-      const allBookingsData = await getAllBookings();
-      setAllBookings(allBookingsData);
+      const roomsPromise = rooms.length > 0 ? Promise.resolve(rooms) : getRooms();
+      const allBookingsPromise = getAllBookings();
+      
+      const [roomsResult, allBookingsResult] = await Promise.all([roomsPromise, allBookingsPromise]);
+      
+      if (rooms.length === 0) setRooms(roomsResult);
+      setAllBookings(allBookingsResult);
     } catch (err) {
-      setError('Failed to load all bookings data.');
+      setError('Failed to load receipt data. Please try again.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [rooms.length]);
+  }, [rooms]);
   
   useEffect(() => {
     if (isLoggedIn) {
         if (currentPage === 'cleaning') {
             fetchCleaningStatuses();
         } else if (currentPage === 'receipt') {
-            fetchAllBookings();
+            fetchReceiptData();
         } else {
             fetchDashboardData(currentMonthDate);
         }
     }
-  }, [isLoggedIn, currentMonthDate, fetchDashboardData, currentPage, fetchCleaningStatuses, fetchAllBookings]);
+  }, [isLoggedIn, currentMonthDate, fetchDashboardData, currentPage, fetchCleaningStatuses, fetchReceiptData]);
 
 
   // Event Handlers
@@ -175,8 +177,12 @@ function App() {
       }
       await saveBooking(payload);
       handleCloseModal();
-      // Refetch dashboard data after any save
-      fetchDashboardData(currentMonthDate);
+      // Refetch data for current page after any save
+      if (currentPage === 'receipt') {
+        fetchReceiptData();
+      } else {
+        fetchDashboardData(currentMonthDate);
+      }
     } catch (err: any) {
       alert(`Error saving booking(s): ${err.message}`);
       throw err;
@@ -187,8 +193,12 @@ function App() {
     try {
       await deleteBooking(bookingId);
       handleCloseModal();
-      // Refetch dashboard data after any delete
-      fetchDashboardData(currentMonthDate);
+      // Refetch data for current page after any delete
+      if (currentPage === 'receipt') {
+        fetchReceiptData();
+      } else {
+        fetchDashboardData(currentMonthDate);
+      }
     } catch (err: any) {
       alert(`Error deleting booking: ${err.message}`);
       throw err;
@@ -257,13 +267,13 @@ function App() {
             />
         )}
         {currentPage === 'receipt' && (
-            <ReceiptPage
-                language={language}
-                bookings={allBookings}
-                isLoading={isLoading}
-                error={error}
-                logoSrc={logoSrc}
-            />
+           <ReceiptPage
+            language={language}
+            logoSrc={logoSrc}
+            bookings={allBookings}
+            isLoading={isLoading}
+            error={error}
+           />
         )}
       </div>
       {isModalOpen && (

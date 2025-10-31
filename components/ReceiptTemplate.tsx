@@ -37,7 +37,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
     if (!isOpen || bookings.length === 0) return null;
 
-    const customer = bookings[0]?.customer;
+    const customer = bookings[0].customer;
     const printDate = new Date().toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
@@ -151,10 +151,10 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         <div className="flex justify-between items-end pt-4 pb-4 border-b border-yellow-500">
                              {/* Customer Info */}
                              <div className="text-xs w-2/3 space-y-1">
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name || '-'}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || '-'}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone || '-'}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer?.tax_id || '-'}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || ''}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone}</p>
+                                {customer?.tax_id && <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer.tax_id}</p>}
                             </div>
                             {/* Receipt Details */}
                             <div className="text-xs text-left w-1/3 pl-4">

@@ -17,7 +17,7 @@ export const translations = {
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
     navCleaning: "Cleaning Status",
-    navReceipt: "Receipts",
+    navReceipt: "Receipt",
     logoUploadTooltip: "Click to upload a new logo",
 
     // Dashboard
@@ -103,6 +103,7 @@ export const translations = {
     confirmNeedsCleaningMessage: "Are you sure you want to mark this room as 'Needs Cleaning'?",
     loadingStatuses: "Loading cleaning statuses...",
 
+    // FIX: Added missing translation keys for ReceiptPage and ReceiptTemplate
     // Receipt Page
     receiptTitle: "Create Receipt",
     searchBookings: "Search bookings by name, phone, booking ID...",
@@ -242,6 +243,7 @@ export const translations = {
     confirmNeedsCleaningMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ยังไม่ทำความสะอาด'?",
     loadingStatuses: "กำลังโหลดสถานะการทำความสะอาด...",
     
+    // FIX: Added missing translation keys for ReceiptPage and ReceiptTemplate
     // Receipt Page
     receiptTitle: "สร้างใบเสร็จ",
     searchBookings: "ค้นหาการจองด้วยชื่อ, เบอร์โทร, เลขที่การจอง...",

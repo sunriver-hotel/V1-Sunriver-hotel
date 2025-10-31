@@ -35,23 +35,6 @@ export const getBookingsForMonth = async (year: number, month: number): Promise<
 };
 
 /**
- * Fetches all bookings from the API.
- */
-export const getAllBookings = async (): Promise<Booking[]> => {
-    try {
-        const response = await fetch(`/api/bookings?all=true`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch all bookings');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('API call to getAllBookings failed:', error);
-        throw error;
-    }
-};
-
-
-/**
  * Creates or updates a booking. The payload shape differs for create vs. update.
  * For create, it expects `room_ids` array. For update, it expects a single `room_id`.
  * @param bookingData The booking data to save.
@@ -150,9 +133,8 @@ export const getLogo = async (): Promise<string | null> => {
   try {
     const response = await fetch('/api/settings');
     if (!response.ok) {
-        // Log the server error but don't throw, allowing the UI to gracefully handle the missing logo.
-        console.error(`API call to getLogo failed with status: ${response.status}`);
-        return null;
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch logo');
     }
     const data = await response.json();
     return data.logo; // API returns { logo: 'data:...' } or { logo: null }
@@ -183,5 +165,21 @@ export const saveLogo = async (logoDataUrl: string): Promise<void> => {
   } catch (error) {
     console.error('API call to saveLogo failed:', error);
     throw error; // Re-throw to be caught by the UI component
+  }
+};
+
+/**
+ * Fetches all bookings from the API, ordered by most recent.
+ */
+export const getAllBookings = async (): Promise<Booking[]> => {
+  try {
+    const response = await fetch('/api/bookings');
+    if (!response.ok) {
+      throw new Error('Failed to fetch all bookings');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API call to getAllBookings failed:', error);
+    throw error;
   }
 };
