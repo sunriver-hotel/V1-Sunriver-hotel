@@ -140,48 +140,27 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         margin: 1.8cm;
                     }
 
-                    html, body {
-                        width: 100%;
-                        height: auto;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: #fff !important;
+                    /* Hide everything on the page by default */
+                    body * {
+                        visibility: hidden;
                     }
 
-                    /* Hide everything except the modal wrapper */
-                    body > * {
-                        display: none !important;
-                    }
-                    .receipt-modal-wrapper {
-                        display: block !important;
+                    /* Make the printable receipt and its children visible */
+                    #receipt-printable, #receipt-printable * {
+                        visibility: visible;
                     }
 
-                    /* Dismantle the modal's centering/layout styles to flatten it */
-                    .receipt-modal-wrapper,
-                    .receipt-modal-wrapper > div,
-                    .receipt-modal-wrapper > div > div {
-                        position: static !important;
-                        display: block !important;
-                        width: auto !important;
-                        height: auto !important;
-                        max-width: none !important;
-                        max-height: none !important;
-                        overflow: visible !important;
-                        background: transparent !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                    }
-                    
-                    /* Ensure the printable content itself is styled correctly */
+                    /* Position the receipt at the top-left of the page */
                     #receipt-printable {
-                        box-shadow: none !important;
-                        border: none !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        margin: 0;
+                        padding: 0;
+                        border: none;
+                        box-shadow: none;
                         font-size: 10pt !important;
-                        min-height: auto !important; /* Allow content to dictate height */
                     }
                     
                     .no-print {

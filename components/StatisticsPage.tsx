@@ -250,9 +250,9 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
   }, [bookings, occupancyPeriod, currentMonth, t.months]);
 
 
-  // --- Data Processing for Room Popularity (**NEW**: With time period filtering) ---
+  // --- **FIX**: Data Processing for Room Popularity by Room Number ---
   const popularityData = useMemo(() => {
-    const nightsByRoomType = new Map<RoomType, number>();
+    const nightsByRoomNumber = new Map<string, number>();
     
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth(); // 0-indexed
@@ -260,7 +260,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     let filterStart: Date, filterEnd: Date;
     
     if (popularityPeriod === 'daily') {
-        // For 'daily', we will use the *entire selected month* as the context
+        // For 'daily', use the entire selected month as the context
         filterStart = new Date(Date.UTC(year, month, 1));
         filterEnd = new Date(Date.UTC(year, month + 1, 0));
     } else if (popularityPeriod === 'monthly') {
@@ -275,25 +275,24 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     const filterEndTime = filterEnd.getTime();
 
     bookings.forEach(booking => {
-        if (!booking.room) return;
+        if (!booking.room || !booking.room.room_number) return;
 
         const bookingStart = new Date(booking.check_in_date + 'T00:00:00Z');
         const bookingEnd = new Date(booking.check_out_date + 'T00:00:00Z');
         const bookingStartTime = bookingStart.getTime();
         const bookingEndTime = bookingEnd.getTime();
 
-        // Calculate the overlap of the booking with the filter period
         const overlapStart = Math.max(filterStartTime, bookingStartTime);
         const overlapEnd = Math.min(filterEndTime, bookingEndTime);
 
         if (overlapEnd > overlapStart) {
             const nightsInPeriod = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24);
-            const roomType = booking.room.room_type;
-            nightsByRoomType.set(roomType, (nightsByRoomType.get(roomType) || 0) + nightsInPeriod);
+            const roomNumber = booking.room.room_number;
+            nightsByRoomNumber.set(roomNumber, (nightsByRoomNumber.get(roomNumber) || 0) + nightsInPeriod);
         }
     });
 
-    const data = Array.from(nightsByRoomType.entries())
+    const data = Array.from(nightsByRoomNumber.entries())
         .map(([label, value]) => ({
             label,
             value: Math.round(value),
@@ -343,7 +342,10 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                 </div>
             </div>
             <div className="overflow-x-auto">
-                <VerticalBarChart data={occupancyData} title={t.occupancyStatistics} />
+                {/* **FIX**: Added min-width to the chart container to fix mobile layout bug */}
+                <div className="min-w-[600px]">
+                    <VerticalBarChart data={occupancyData} title={t.occupancyStatistics} />
+                </div>
             </div>
         </div>
 
@@ -352,7 +354,6 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
                 <h2 className="text-xl font-semibold text-text-dark">{t.roomPopularity}</h2>
                  <div className="flex items-center gap-2">
-                    {/* **NEW**: Popularity Period Filter */}
                     <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
                        <PeriodButton value="daily" label={t.daily} current={popularityPeriod} setter={setPopularityPeriod} />
                        <PeriodButton value="monthly" label={t.monthly} current={popularityPeriod} setter={setPopularityPeriod} />
