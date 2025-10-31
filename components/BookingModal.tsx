@@ -254,13 +254,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
             <div className="col-span-full border-t border-gray-200 my-2"></div>
 
             {/* Booking Info */}
-            <div>
-              <label className="block text-sm font-medium text-text-dark">{t.checkInDate}</label>
-              <input type="date" name="check_in_date" value={formData.check_in_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
-            </div>
-             <div>
-              <label className="block text-sm font-medium text-text-dark">{t.checkOutDate}</label>
-              <input type="date" name="check_out_date" value={formData.check_out_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+            <div className="col-span-full lg:col-span-2 grid grid-cols-2 gap-x-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-dark">{t.checkInDate}</label>
+                  <input type="date" name="check_in_date" value={formData.check_in_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+                </div>
+                 <div>
+                  <label className="block text-sm font-medium text-text-dark">{t.checkOutDate}</label>
+                  <input type="date" name="check_out_date" value={formData.check_out_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+                </div>
             </div>
             <div className="hidden lg:block"></div> {/* Spacer for grid */}
              
