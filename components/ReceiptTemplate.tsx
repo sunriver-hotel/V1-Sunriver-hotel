@@ -133,13 +133,13 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
                 }
-                /* --- DEFINITIVE PRINT STYLES --- */
+                /* --- DEFINITIVE PRINT STYLES FOR ALL DEVICES --- */
                 @media print {
                     @page {
                         size: A4;
                         margin: 1.8cm;
                     }
-                    
+
                     html, body {
                         width: 100%;
                         height: auto;
@@ -148,25 +148,40 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         background: #fff !important;
                     }
 
-                    /* The most reliable print isolation technique */
-                    body * {
-                        visibility: hidden !important;
+                    /* Hide everything except the modal wrapper */
+                    body > * {
+                        display: none !important;
+                    }
+                    .receipt-modal-wrapper {
+                        display: block !important;
                     }
 
-                    #receipt-printable, #receipt-printable * {
-                        visibility: visible !important;
-                    }
-
-                    #receipt-printable {
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
+                    /* Dismantle the modal's centering/layout styles to flatten it */
+                    .receipt-modal-wrapper,
+                    .receipt-modal-wrapper > div,
+                    .receipt-modal-wrapper > div > div {
+                        position: static !important;
+                        display: block !important;
+                        width: auto !important;
+                        height: auto !important;
+                        max-width: none !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                        background: transparent !important;
                         box-shadow: none !important;
                         border: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    
+                    /* Ensure the printable content itself is styled correctly */
+                    #receipt-printable {
+                        box-shadow: none !important;
+                        border: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                         font-size: 10pt !important;
+                        min-height: auto !important; /* Allow content to dictate height */
                     }
                     
                     .no-print {

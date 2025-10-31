@@ -160,23 +160,32 @@ interface StatisticsPageProps {
   language: Language;
   rooms: Room[];
   bookings: Booking[];
+  currentMonth: Date;
+  onMonthChange: (date: Date) => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
-type OccupancyPeriod = 'daily' | 'monthly' | 'yearly';
+type TimePeriod = 'daily' | 'monthly' | 'yearly';
 
-const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookings }) => {
+const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookings, currentMonth, onMonthChange, isLoading, error }) => {
   const t = translations[language];
-  const [occupancyPeriod, setOccupancyPeriod] = useState<OccupancyPeriod>('daily');
+  const [occupancyPeriod, setOccupancyPeriod] = useState<TimePeriod>('daily');
+  const [popularityPeriod, setPopularityPeriod] = useState<TimePeriod>('monthly'); // **NEW**: State for popularity filter
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | 'All'>('All');
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+
+  const handleMonthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const [year, month] = e.target.value.split('-').map(Number);
+    onMonthChange(new Date(year, month - 1, 1));
+  };
+  
+  const selectedMonthString = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
 
   // --- Data Processing for Occupancy Statistics ---
   const occupancyData = useMemo(() => {
     const dataMap = new Map<string, number>();
-    const [year, month] = selectedMonth.split('-').map(Number);
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
 
     if (occupancyPeriod === 'daily') {
         const daysInMonth = new Date(year, month, 0).getDate();
@@ -238,44 +247,67 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     }
 
     return sortedData.map(([label, value]) => ({ label, value }));
-  }, [bookings, occupancyPeriod, selectedMonth, t.months]);
+  }, [bookings, occupancyPeriod, currentMonth, t.months]);
 
 
-  // --- Data Processing for Room Popularity ---
+  // --- Data Processing for Room Popularity (**NEW**: With time period filtering) ---
   const popularityData = useMemo(() => {
-    const nightsByRoom = new Map<number, number>();
+    const nightsByRoomType = new Map<RoomType, number>();
     
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth(); // 0-indexed
+    
+    let filterStart: Date, filterEnd: Date;
+    
+    if (popularityPeriod === 'daily') {
+        // For 'daily', we will use the *entire selected month* as the context
+        filterStart = new Date(Date.UTC(year, month, 1));
+        filterEnd = new Date(Date.UTC(year, month + 1, 0));
+    } else if (popularityPeriod === 'monthly') {
+        filterStart = new Date(Date.UTC(year, month, 1));
+        filterEnd = new Date(Date.UTC(year, month + 1, 0));
+    } else { // yearly
+        filterStart = new Date(Date.UTC(year, 0, 1));
+        filterEnd = new Date(Date.UTC(year, 11, 31));
+    }
+    
+    const filterStartTime = filterStart.getTime();
+    const filterEndTime = filterEnd.getTime();
+
     bookings.forEach(booking => {
-        const start = new Date(booking.check_in_date).getTime();
-        const end = new Date(booking.check_out_date).getTime();
-        const duration = (end - start) / (1000 * 60 * 60 * 24); // nights
-        nightsByRoom.set(booking.room_id, (nightsByRoom.get(booking.room_id) || 0) + duration);
+        if (!booking.room) return;
+
+        const bookingStart = new Date(booking.check_in_date + 'T00:00:00Z');
+        const bookingEnd = new Date(booking.check_out_date + 'T00:00:00Z');
+        const bookingStartTime = bookingStart.getTime();
+        const bookingEndTime = bookingEnd.getTime();
+
+        // Calculate the overlap of the booking with the filter period
+        const overlapStart = Math.max(filterStartTime, bookingStartTime);
+        const overlapEnd = Math.min(filterEndTime, bookingEndTime);
+
+        if (overlapEnd > overlapStart) {
+            const nightsInPeriod = (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24);
+            const roomType = booking.room.room_type;
+            nightsByRoomType.set(roomType, (nightsByRoomType.get(roomType) || 0) + nightsInPeriod);
+        }
     });
 
-    const filteredRooms = selectedRoomType === 'All' 
-        ? rooms 
-        : rooms.filter(room => room.room_type === selectedRoomType);
-    
-    return filteredRooms
-      .map(room => ({
-        room,
-        nights: nightsByRoom.get(room.room_id) || 0,
-      }))
-      .sort((a, b) => b.nights - a.nights)
-      .slice(0, 10) // Show top 10
-      .map(item => ({
-        label: `Room ${item.room.room_number}`,
-        value: Math.round(item.nights),
-      }))
-      .filter(item => item.value > 0); // Only show rooms that have been booked
+    const data = Array.from(nightsByRoomType.entries())
+        .map(([label, value]) => ({
+            label,
+            value: Math.round(value),
+        }));
 
-  }, [bookings, rooms, selectedRoomType]);
+    return data.filter(item => item.value > 0).sort((a,b) => b.value - a.value);
+
+  }, [bookings, popularityPeriod, currentMonth]);
   
-  const PeriodButton: React.FC<{ value: OccupancyPeriod, label: string }> = ({ value, label }) => {
-    const isActive = occupancyPeriod === value;
+  const PeriodButton: React.FC<{ value: TimePeriod, label: string, current: TimePeriod, setter: (p: TimePeriod) => void }> = ({ value, label, current, setter }) => {
+    const isActive = current === value;
     return (
         <button
-            onClick={() => setOccupancyPeriod(value)}
+            onClick={() => setter(value)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-primary-yellow text-white' : 'bg-gray-200 hover:bg-gray-300 text-text-dark'}`}
         >
             {label}
@@ -283,10 +315,11 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
     );
   }
 
-  return (
-    <div className="w-full h-full flex flex-col space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.statisticsTitle}</h1>
-      
+  const chartContent = () => {
+    if (isLoading) return <div className="text-center p-8">{t.loadingBookings}</div>;
+    if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
+
+    return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Occupancy Statistics Card */}
         <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
@@ -296,16 +329,16 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
                     {(occupancyPeriod === 'daily' || occupancyPeriod === 'monthly') && (
                         <input
                             type="month"
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            value={selectedMonthString}
+                            onChange={handleMonthInputChange}
                             className="px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow text-sm"
                             aria-label={t.selectMonth}
                         />
                     )}
                     <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
-                        <PeriodButton value="daily" label={t.daily} />
-                        <PeriodButton value="monthly" label={t.monthly} />
-                        <PeriodButton value="yearly" label={t.yearly} />
+                        <PeriodButton value="daily" label={t.daily} current={occupancyPeriod} setter={setOccupancyPeriod} />
+                        <PeriodButton value="monthly" label={t.monthly} current={occupancyPeriod} setter={setOccupancyPeriod} />
+                        <PeriodButton value="yearly" label={t.yearly} current={occupancyPeriod} setter={setOccupancyPeriod} />
                     </div>
                 </div>
             </div>
@@ -319,18 +352,12 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
                 <h2 className="text-xl font-semibold text-text-dark">{t.roomPopularity}</h2>
                  <div className="flex items-center gap-2">
-                    <label htmlFor="room-type-filter" className="text-sm font-medium text-text-dark">{t.filterByRoomType}</label>
-                     <select
-                        id="room-type-filter"
-                        value={selectedRoomType}
-                        onChange={(e) => setSelectedRoomType(e.target.value as RoomType | 'All')}
-                        className="px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow text-sm"
-                     >
-                        <option value="All">{t.allTypes}</option>
-                        <option value="River view">River view</option>
-                        <option value="Standard view">Standard view</option>
-                        <option value="Cottage">Cottage</option>
-                     </select>
+                    {/* **NEW**: Popularity Period Filter */}
+                    <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
+                       <PeriodButton value="daily" label={t.daily} current={popularityPeriod} setter={setPopularityPeriod} />
+                       <PeriodButton value="monthly" label={t.monthly} current={popularityPeriod} setter={setPopularityPeriod} />
+                       <PeriodButton value="yearly" label={t.yearly} current={popularityPeriod} setter={setPopularityPeriod} />
+                    </div>
                  </div>
             </div>
              <div className="overflow-x-auto">
@@ -338,6 +365,13 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, bookin
             </div>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col space-y-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.statisticsTitle}</h1>
+      {chartContent()}
     </div>
   );
 };

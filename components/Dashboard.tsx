@@ -123,14 +123,16 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="flex justify-center items-center py-20"><p className="text-red-500">{error}</p></div>
           ) : (
             <div className="overflow-x-auto pb-2">
-              <Calendar 
-                currentDate={currentMonthDate} 
-                selectedDate={selectedDate}
-                onDateSelect={handleCalendarDateClick}
-                language={language}
-                occupancyMap={occupancyMap}
-                totalRooms={rooms.length}
-              />
+              <div className="min-w-[350px]">
+                <Calendar 
+                  currentDate={currentMonthDate} 
+                  selectedDate={selectedDate}
+                  onDateSelect={handleCalendarDateClick}
+                  language={language}
+                  occupancyMap={occupancyMap}
+                  totalRooms={rooms.length}
+                />
+              </div>
             </div>
           )}
         </div>
