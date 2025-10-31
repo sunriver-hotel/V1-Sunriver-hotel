@@ -23,7 +23,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
         return `${baseClasses} bg-white text-text-dark hover:bg-gray-100`;
     };
 
-    const handleUploadClick = () => {
+    const handleLogoClick = () => {
         fileInputRef.current?.click();
     };
 
@@ -44,8 +44,28 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
         <header className="bg-white shadow-md sticky top-0 z-40">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-3">
-                    <div className="flex items-center flex-wrap gap-2 sm:space-x-4">
-                        {logoSrc && <img src={logoSrc} alt="Logo" className="h-8 w-auto mr-2 sm:mr-4" />}
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-4">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                            className="hidden"
+                            aria-hidden="true"
+                        />
+                        <div
+                            onClick={handleLogoClick}
+                            className="cursor-pointer group relative"
+                            title={t.logoUploadTooltip}
+                        >
+                            {logoSrc ? (
+                                <img src={logoSrc} alt="Logo" className="h-10 w-10 rounded-full object-cover" />
+                            ) : (
+                                <div className="h-10 w-10 rounded-full bg-primary-yellow"></div>
+                            )}
+                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
+                        </div>
+                        
                         <button onClick={() => onNavigate('dashboard')} className={getButtonClasses('dashboard')}>
                             {t.navDashboard}
                         </button>
@@ -60,20 +80,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                         </button>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            className="hidden"
-                            aria-hidden="true"
-                        />
-                        <button
-                            onClick={handleUploadClick}
-                            className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-text-dark bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow"
-                        >
-                            {t.uploadLogo}
-                        </button>
                         <button
                             onClick={onLogout}
                             className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-yellow hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow"

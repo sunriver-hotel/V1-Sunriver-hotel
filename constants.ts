@@ -17,7 +17,7 @@ export const translations = {
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
     navCleaning: "Cleaning Status",
-    uploadLogo: "Upload Logo",
+    logoUploadTooltip: "Click to upload a new logo",
 
     // Dashboard
     dashboardTitle: "Booking Overview",
@@ -120,7 +120,7 @@ export const translations = {
     navRoomStatus: "สถานะห้องพัก",
     navStatistics: "Dashboard",
     navCleaning: "สถานะทำความสะอาด",
-    uploadLogo: "อัปโหลดโลโก้",
+    logoUploadTooltip: "คลิกเพื่ออัปโหลดโลโก้ใหม่",
 
     // Dashboard
     dashboardTitle: "ภาพรวมการจอง",

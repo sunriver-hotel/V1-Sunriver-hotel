@@ -61,7 +61,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg m-4">
       <div className="text-center">
-        {logoSrc && <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-16 w-auto mb-4" />}
+        {logoSrc ? (
+            <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-20 w-20 rounded-full object-cover mb-4" />
+        ) : (
+            <div className="mx-auto h-20 w-20 rounded-full bg-primary-yellow mb-4"></div>
+        )}
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
       </div>
 
