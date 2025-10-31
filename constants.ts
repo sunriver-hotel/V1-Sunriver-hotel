@@ -15,6 +15,7 @@ export const translations = {
     // Navbar
     navDashboard: "Booking Overview",
     navRoomStatus: "Room Status",
+    navStatistics: "Dashboard",
 
     // Dashboard
     dashboardTitle: "Booking Overview",
@@ -76,6 +77,17 @@ export const translations = {
     statusCheckIn: "Check-in",
     statusCheckOut: "Check-out",
     statusTurnover: "Check-out / Check-in",
+    
+    // Statistics Page
+    statisticsTitle: "Statistics Dashboard",
+    occupancyStatistics: "Occupancy Statistics",
+    roomPopularity: "Room Popularity",
+    daily: "Daily",
+    monthly: "Monthly",
+    yearly: "Yearly",
+    filterByRoomType: "Filter by Room Type:",
+    allTypes: "All Types",
+    totalNightsBooked: "Total Nights Booked",
   },
   th: {
     loginTitle: "เข้าสู่ระบบสำหรับพนักงาน",
@@ -93,6 +105,7 @@ export const translations = {
     // Navbar
     navDashboard: "ภาพรวมการจอง",
     navRoomStatus: "สถานะห้องพัก",
+    navStatistics: "Dashboard",
 
     // Dashboard
     dashboardTitle: "ภาพรวมการจอง",
@@ -154,5 +167,16 @@ export const translations = {
     statusCheckIn: "เช็คอิน",
     statusCheckOut: "เช็คเอาท์",
     statusTurnover: "เช็คเอาท์ / เช็คอิน",
+
+    // Statistics Page
+    statisticsTitle: "Dashboard สถิติ",
+    occupancyStatistics: "สถิติการเข้าพัก",
+    roomPopularity: "ความนิยมของห้องพัก",
+    daily: "รายวัน",
+    monthly: "รายเดือน",
+    yearly: "รายปี",
+    filterByRoomType: "กรองตามประเภทห้อง:",
+    allTypes: "ทุกประเภท",
+    totalNightsBooked: "จำนวนคืนที่เข้าพักทั้งหมด",
   }
 };

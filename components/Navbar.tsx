@@ -31,6 +31,9 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                         <button onClick={() => onNavigate('room-status')} className={getButtonClasses('room-status')}>
                             {t.navRoomStatus}
                         </button>
+                        <button onClick={() => onNavigate('statistics')} className={getButtonClasses('statistics')}>
+                            {t.navStatistics}
+                        </button>
                     </div>
                     <button
                         onClick={onLogout}

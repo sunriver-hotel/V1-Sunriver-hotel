@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import RoomStatusPage from './components/RoomStatusPage';
+import StatisticsPage from './components/StatisticsPage';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
 import type { Language, Page, Booking, Room } from './types';
@@ -137,7 +138,7 @@ function App() {
             error={error}
             currentMonthDate={currentMonthDate}
             setCurrentMonthDate={setCurrentMonthDate}
-            onAddBooking={handleOpenNewBookingModal}
+            onAddBooking={() => handleOpenNewBookingModal()}
             onEditBooking={handleOpenEditBookingModal}
           />
         )}
@@ -148,6 +149,13 @@ function App() {
             bookings={bookings}
             onBookRoom={handleOpenNewBookingModal}
             onEditBooking={handleOpenEditBookingModal}
+           />
+        )}
+        {currentPage === 'statistics' && (
+           <StatisticsPage
+            language={language}
+            rooms={rooms}
+            bookings={bookings}
            />
         )}
       </div>

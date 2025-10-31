@@ -1,5 +1,5 @@
 export type Language = 'en' | 'th';
-export type Page = 'dashboard' | 'room-status';
+export type Page = 'dashboard' | 'room-status' | 'statistics';
 
 export type RoomType = 'River view' | 'Standard view' | 'Cottage';
 export type BedType = 'Double bed' | 'Twin bed';
