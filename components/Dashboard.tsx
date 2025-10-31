@@ -11,6 +11,14 @@ interface DashboardProps {
   language: Language;
 }
 
+// Helper function to format date correctly, avoiding timezone shifts
+const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const t = translations[language];
   
@@ -124,7 +132,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   
   const handleCalendarDateClick = (date: Date) => {
     setSelectedDate(date);
-    setDefaultCheckInDate(date.toISOString().split('T')[0]);
+    // FIX: Use a timezone-safe formatter to prevent date from shifting by one day
+    setDefaultCheckInDate(formatDateForInput(date));
     setEditingBooking(null);
     setIsModalOpen(true);
   };
@@ -134,16 +143,33 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     setEditingBooking(null);
     setDefaultCheckInDate(null);
   };
-
-  const handleSaveBooking = async (bookingData: Partial<Booking>) => {
+  
+  // Updated to handle multiple room bookings in a single transaction-like manner from the frontend
+  const handleSaveBooking = async (bookingData: Omit<Partial<Booking>, 'room_id' | 'booking_id'>, roomIds: number[]) => {
     try {
-      await saveBooking(bookingData);
-      handleCloseModal();
-      fetchDashboardData(); // Re-fetch data to show updates
+        const savePromises = roomIds.map(roomId => {
+            const singleBookingData: Partial<Booking> = {
+                ...bookingData,
+                room_id: roomId,
+            };
+            // If editing, the original booking_id must be passed. This logic assumes editing only affects one room.
+            if (editingBooking && roomIds.length === 1 && roomId === editingBooking.room_id) {
+                singleBookingData.booking_id = editingBooking.booking_id;
+            }
+            return saveBooking(singleBookingData);
+        });
+
+        await Promise.all(savePromises);
+
+        handleCloseModal();
+        fetchDashboardData(); // Re-fetch data to show all updates
     } catch (err: any) {
-      alert(`Error saving booking: ${err.message}`);
+        alert(`Error saving booking(s): ${err.message}`);
+        // Re-throw to allow modal to handle its saving state
+        throw err;
     }
   };
+
 
   return (
     <div className="w-full h-screen bg-pastel-bg p-4 md:p-6 lg:p-8 flex flex-col">
