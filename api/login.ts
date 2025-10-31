@@ -41,7 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const passwordInDb = rows[0].password_hash;
 
     // กรณีที่ 2: เปรียบเทียบรหัสผ่านที่ผู้ใช้ส่งมากับรหัสผ่านในฐานข้อมูล (ซึ่งเป็น Plain text)
-    const isValid = password === passwordInDb;
+    // เพิ่ม .trim() เพื่อตัดช่องว่างที่อาจเกิดขึ้นโดยไม่ตั้งใจ
+    const isValid = password.trim() === passwordInDb.trim();
 
     if (isValid) {
       // รหัสผ่านถูกต้อง! ล็อกอินสำเร็จ

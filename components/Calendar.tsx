@@ -31,14 +31,19 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      date.setHours(0, 0, 0, 0);
+      // สร้าง Date object ในระบบ UTC เพื่อให้ตรงกับ key ของ occupancyMap
+      const date = new Date(Date.UTC(year, month, day));
       const dateString = date.toISOString().split('T')[0];
+      
       const occupiedRooms = occupancyMap.get(dateString) || 0;
       const availableRooms = totalRooms - occupiedRooms;
 
-      const isToday = date.getTime() === today.getTime();
-      const isSelected = date.getTime() === selectedDate.getTime();
+      // สำหรับการเปรียบเทียบ isToday และ isSelected ต้องใช้ UTC ด้วย
+      const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+      const selectedDateUTC = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()));
+
+      const isToday = date.getTime() === todayUTC.getTime();
+      const isSelected = date.getTime() === selectedDateUTC.getTime();
       
       const dayCellClasses = [
         "relative p-2 border-r border-b border-gray-200 flex flex-col justify-start items-start cursor-pointer transition-colors duration-200",
@@ -49,9 +54,16 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
         "text-sm font-semibold mb-1",
         isToday ? "bg-primary-yellow text-white rounded-full h-6 w-6 flex items-center justify-center" : "text-text-dark"
       ].join(' ');
+      
+      const handleDateSelect = () => {
+        // เมื่อเลือกวัน ให้ส่งค่ากลับเป็น Local time เพื่อให้ UI ส่วนอื่นทำงานถูกต้อง
+        const localDate = new Date(year, month, day);
+        localDate.setHours(0,0,0,0);
+        onDateSelect(localDate);
+      }
 
       days.push(
-        <div key={day} className={dayCellClasses} onClick={() => onDateSelect(date)}>
+        <div key={day} className={dayCellClasses} onClick={handleDateSelect}>
           <span className={dayNumberClasses}>{day}</span>
           <div className="w-full text-center mt-auto space-y-1">
              <div className="flex items-center justify-center gap-2">

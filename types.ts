@@ -14,7 +14,9 @@ export interface Room {
 }
 
 export interface Customer {
-    customer_id: number;
+    // FIX: Made customer_id optional to allow creating a new customer along with a new booking.
+    // The backend will generate the ID.
+    customer_id?: number;
     customer_name: string;
     phone: string;
     email?: string;
