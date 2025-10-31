@@ -137,32 +137,57 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                 @media print {
                     @page {
                         size: A4;
-                        margin: 1.8cm; /* Standard A4 margin */
+                        margin: 1.8cm;
                     }
 
-                    /* 1. Hide everything by default */
-                    body * {
-                        visibility: hidden;
+                    /* Reset body to prevent any interference */
+                    body, html {
+                        background: #fff !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        overflow: hidden !important;
                     }
 
-                    /* 2. Make the printable section and EVERYTHING inside it visible */
-                    #receipt-printable, #receipt-printable * {
-                        visibility: visible;
-                    }
-
-                    /* 3. Take the printable section out of the normal layout flow 
-                          and position it at the top-left of the printed page. */
-                    #receipt-printable {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%; /* Ensure it spans the printable width */
-                        font-size: 10pt; /* Adjust font size for print */
+                    /* Hide everything that is NOT the modal wrapper */
+                    body > *:not(.receipt-modal-wrapper) {
+                        display: none !important;
                     }
                     
-                    /* Hide the UI buttons that are inside the modal but outside the printable area */
+                    /* Make the modal wrapper the root element for printing */
+                    .receipt-modal-wrapper {
+                        display: block !important;
+                        position: static !important;
+                        background: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    
+                    /* Reset the modal's inner containers to just be simple blocks */
+                    .receipt-modal-wrapper > div,
+                    .receipt-modal-wrapper .overflow-y-auto {
+                        display: block !important;
+                        position: static !important;
+                        width: 100% !important;
+                        max-width: none !important;
+                        height: auto !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+
+                    /* Hide the buttons bar specifically */
                     .no-print {
-                        display: none;
+                        display: none !important;
+                    }
+
+                    /* Ensure the printable content itself has no extra spacing */
+                    #receipt-printable {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        font-size: 10pt;
                     }
                 }
                 `}

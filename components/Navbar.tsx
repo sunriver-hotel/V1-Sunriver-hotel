@@ -21,7 +21,8 @@ const DashboardIcon = () => (
 
 const RoomStatusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 18h18M3 12l6.424 6.424a2 2 0 002.828 0L18 12M4 9a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V9z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v11m0-11h18v11m0 0a2 2 0 01-2 2H5a2 2 0 01-2-2m17-9a2 2 0 00-2-2H5a2 2 0 00-2 2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 11h3v4H5z" />
     </svg>
 );
 
@@ -121,15 +122,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                         })}
 
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        <button
-                            onClick={onLogout}
-                            className="flex items-center gap-2 py-2 px-3 lg:px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-yellow hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow"
-                        >
-                            <LogoutIcon />
-                            <span className="hidden lg:inline">{t.logoutButton}</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={onLogout}
+                        className="flex items-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow bg-white text-text-dark hover:bg-gray-100 lg:bg-primary-yellow lg:text-white lg:hover:bg-opacity-90"
+                    >
+                        <LogoutIcon />
+                        <span className="hidden lg:inline">{t.logoutButton}</span>
+                    </button>
                 </div>
             </div>
         </header>
