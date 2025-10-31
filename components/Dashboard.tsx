@@ -11,9 +11,8 @@ interface DashboardProps {
   isLoading: boolean;
   error: string | null;
   currentMonthDate: Date;
-  // FIX: Updated type to allow updater functions for state, resolving incorrect type error.
   setCurrentMonthDate: React.Dispatch<React.SetStateAction<Date>>;
-  onAddBooking: () => void;
+  onAddBooking: (checkInDate?: string) => void;
   onEditBooking: (booking: Booking) => void;
 }
 
@@ -90,9 +89,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     return { checkIns, checkOuts, staying };
   }, [bookings, selectedDate]);
   
-  const handleCalendarDateClick = (date: Date) => { // date is now UTC
-    setSelectedDate(date);
-    onAddBooking(); // This will now be handled by App.tsx to open modal with defaults
+  const handleCalendarDateClick = (date: Date) => { // date is UTC
+    setSelectedDate(date); // Update the summary view
+    const dateString = date.toISOString().split('T')[0]; // Format for modal
+    onAddBooking(dateString); // Trigger modal with selected date
   };
 
 
@@ -126,7 +126,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Calendar 
                 currentDate={currentMonthDate} 
                 selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
+                onDateSelect={handleCalendarDateClick}
                 language={language}
                 occupancyMap={occupancyMap}
                 totalRooms={rooms.length}

@@ -172,7 +172,7 @@ function App() {
             error={error}
             currentMonthDate={currentMonthDate}
             setCurrentMonthDate={setCurrentMonthDate}
-            onAddBooking={() => handleOpenNewBookingModal()}
+            onAddBooking={handleOpenNewBookingModal}
             onEditBooking={handleOpenEditBookingModal}
           />
         )}
