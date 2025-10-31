@@ -12,7 +12,6 @@ interface ReceiptTemplateProps {
     paymentDate: string;
 }
 
-// FIX: Added checkIn and checkOut to group items for displaying dates correctly
 interface GroupedItem {
     description: string;
     checkIn: string;
@@ -23,10 +22,10 @@ interface GroupedItem {
     total: number;
 }
 
-// Helper function to calculate nights, ensuring it returns at least 1.
+// FIX: Correctly handle dates as UTC to prevent timezone-related calculation errors.
 const calculateNights = (checkIn: string, checkOut: string): number => {
-    const start = new Date(checkIn).getTime();
-    const end = new Date(checkOut).getTime();
+    const start = new Date(checkIn + 'T00:00:00Z').getTime();
+    const end = new Date(checkOut + 'T00:00:00Z').getTime();
     if (isNaN(start) || isNaN(end) || end <= start) return 1;
     const duration = (end - start) / (1000 * 60 * 60 * 24);
     return Math.max(1, Math.round(duration));
@@ -42,8 +41,6 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
         year: 'numeric', month: 'long', day: 'numeric'
     });
 
-    // **FIX:** Overhauled grouping logic to include check-in/out dates.
-    // This correctly separates bookings with different dates as per user requirements.
     const groupedItems = useMemo(() => {
         const itemsMap = new Map<string, GroupedItem>();
 
@@ -52,7 +49,6 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
             if (!room) return;
 
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            // Key now includes dates to ensure unique line items for different stay periods.
             const key = `${room.room_type}-${room.bed_type}-${booking.price_per_night}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
@@ -151,10 +147,10 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         <div className="flex justify-between items-end pt-4 pb-4 border-b border-yellow-500">
                              {/* Customer Info */}
                              <div className="text-xs w-2/3 space-y-1">
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || ''}</p>
-                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone}</p>
-                                {customer?.tax_id && <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer.tax_id}</p>}
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ชื่อลูกค้า' : 'Customer Name'}:</span> {customer?.customer_name || '-'}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'ที่อยู่' : 'Address'}:</span> {customer?.address || '-'}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'โทรศัพท์' : 'Tel. No.'}:</span> {customer?.phone || '-'}</p>
+                                <p><span className="font-bold w-28 inline-block">{language === 'th' ? 'เลขที่ผู้เสียภาษี' : 'Tax ID'}:</span> {customer?.tax_id || '-'}</p>
                             </div>
                             {/* Receipt Details */}
                             <div className="text-xs text-left w-1/3 pl-4">
@@ -238,9 +234,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
                         {/* Footer */}
                         <footer className="mt-8 text-center text-[8pt] text-gray-500 border-t pt-2">
-                            <span>{t.hotelInfo.phone.split(' ')[1]}</span>
-                            <span className="mx-2">●</span>
-                            <span>{language === 'th' ? "272 หมู่ที่ 3 ต.ท่าอุเทน อ.ท่าอุเทน จ.นครพนม 48120" : "272 Moo 3, Tha Uthen, Nakhon Phanom 48120"}</span>
+                             <p>{t.hotelInfo.address}</p>
                         </footer>
                      </div>
                 </div>
