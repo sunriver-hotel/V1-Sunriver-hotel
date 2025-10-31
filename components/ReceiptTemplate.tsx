@@ -125,7 +125,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 font-['Sarabun',_sans-serif]">
+        <div className="receipt-modal-wrapper fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 font-['Sarabun',_sans-serif]">
              <style>
                 {`
                 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
@@ -135,52 +135,57 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                 }
                 /* --- DEFINITIVE PRINT STYLES --- */
                 @media print {
-                    /* Hide everything by default */
-                    body * {
-                        visibility: hidden;
-                    }
-                    /* Hide elements specifically marked not for printing */
-                    .no-print {
-                        display: none !important;
-                    }
-                    /* Make only the printable area and its children visible */
-                    #receipt-printable, #receipt-printable * {
-                        visibility: visible;
-                    }
-
                     /* Define A4 page size and margins */
                     @page {
                         size: A4;
                         margin: 1.8cm;
                     }
-                    
-                    /* Reset body styles for a clean print slate */
-                    body {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background-color: #fff !important;
+
+                    /* Hide everything in the body by default */
+                    body > * {
+                        display: none !important;
                     }
 
-                    /* Position the printable area to fill the entire page */
-                    #receipt-printable {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        height: auto;
-                        font-size: 10pt;
+                    /* Explicitly show our modal wrapper and ensure it's a block element */
+                    .receipt-modal-wrapper {
+                        display: block !important;
+                    }
 
-                        /* Override all screen styles that cause layout breaks */
-                        min-height: auto !important;
+                    /* Dismantle the modal's screen layout for printing */
+                    .receipt-modal-wrapper,
+                    .receipt-modal-wrapper > div,
+                    .receipt-modal-wrapper > div > div {
+                        position: static !important;
+                        display: block !important;
+                        width: 100% !important;
+                        height: auto !important;
+                        max-height: none !important;
                         padding: 0 !important;
                         margin: 0 !important;
+                        background: none !important;
                         box-shadow: none !important;
-                        border: none !important;
+                        overflow: visible !important;
+                    }
+
+                    /* Hide the non-printable header within the modal */
+                    .no-print {
+                        display: none !important;
+                    }
+
+                    /* Make sure the printable area and its children are visible */
+                    #receipt-printable, #receipt-printable * {
+                        visibility: visible;
+                    }
+
+                    /* Style the actual receipt content for printing */
+                    #receipt-printable {
+                        font-size: 10pt;
+                        min-height: auto !important;
                     }
                     
-                    /* Fine-tune spacing for elements within the receipt for better fit */
+                    /* Fine-tune spacing to prevent overflow */
                     .signature-section-print-margin {
-                        margin-top: 4rem !important; /* Reduce space to prevent overflow */
+                        margin-top: 4rem !important;
                     }
                 }
                 `}
