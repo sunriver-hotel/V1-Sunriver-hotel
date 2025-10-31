@@ -11,15 +11,8 @@ const pool = new Pool({
 
 const getBookings = async (req: VercelRequest, res: VercelResponse) => {
   const { year, month } = req.query;
-  if (!year || !month) {
-    return res.status(400).json({ message: 'Year and month are required' });
-  }
-
-  try {
-    const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
-    const endDate = new Date(Date.UTC(Number(year), Number(month), 1)); // Go to the start of the next month
-    
-    const query = `
+  
+  const baseQuery = `
       SELECT 
         b.booking_id, b.customer_id, b.room_id, 
         TO_CHAR(b.check_in_date, 'YYYY-MM-DD') as check_in_date, 
@@ -43,11 +36,25 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
       FROM public.bookings b
       JOIN public.customers c ON b.customer_id = c.customer_id
       JOIN public.rooms r ON b.room_id = r.room_id
-      WHERE b.check_in_date < $2 AND b.check_out_date > $1
-    `;
+  `;
 
-    const { rows } = await pool.query(query, [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]);
-    return res.status(200).json(rows);
+  try {
+    // If year and month are provided, filter by month for the calendar view
+    if (year && month) {
+      const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+      const endDate = new Date(Date.UTC(Number(year), Number(month), 1));
+      
+      const query = `${baseQuery} WHERE b.check_in_date < $2 AND b.check_out_date > $1 ORDER BY b.created_at DESC`;
+
+      const { rows } = await pool.query(query, [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]);
+      return res.status(200).json(rows);
+    } 
+    // Otherwise, fetch all bookings for the receipt page
+    else {
+      const query = `${baseQuery} ORDER BY b.created_at DESC`;
+      const { rows } = await pool.query(query);
+      return res.status(200).json(rows);
+    }
   } catch (error) {
     console.error('Get Bookings Error:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
