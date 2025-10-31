@@ -14,7 +14,7 @@ interface ReceiptPageProps {
 const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, isLoading, error }) => {
     const t = translations[language];
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set());
+    const [selectedBookingIds, setSelectedBookingIds] = useState<string[]>([]);
     const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Transfer'>('Cash');
     const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [showReceipt, setShowReceipt] = useState(false);
@@ -35,18 +35,16 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
 
     const handleSelectBooking = (bookingId: string) => {
         setSelectedBookingIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(bookingId)) {
-                newSet.delete(bookingId);
+            if (prev.includes(bookingId)) {
+                return prev.filter(id => id !== bookingId);
             } else {
-                newSet.add(bookingId);
+                return [...prev, bookingId];
             }
-            return newSet;
         });
     };
 
     const handleCreateReceipt = () => {
-        if (selectedBookingIds.size === 0) {
+        if (selectedBookingIds.length === 0) {
             alert(t.pleaseSelectBookings);
             return;
         }
@@ -54,7 +52,11 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
     };
 
     const selectedBookings = useMemo(() => {
-        return bookings.filter(b => selectedBookingIds.has(b.booking_id));
+        // **FIX:** Preserve the user's selection order.
+        // The first selected booking's customer info will be used for the receipt.
+        if (selectedBookingIds.length === 0) return [];
+        const bookingMap = new Map(bookings.map(b => [b.booking_id, b]));
+        return selectedBookingIds.map(id => bookingMap.get(id)).filter((b): b is Booking => !!b);
     }, [selectedBookingIds, bookings]);
 
     if (isLoading) {
@@ -87,7 +89,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
                             <div key={booking.booking_id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
                                 <input
                                     type="checkbox"
-                                    checked={selectedBookingIds.has(booking.booking_id)}
+                                    checked={selectedBookingIds.includes(booking.booking_id)}
                                     onChange={() => handleSelectBooking(booking.booking_id)}
                                     className="h-5 w-5 rounded border-gray-300 text-primary-yellow focus:ring-primary-yellow"
                                 />
@@ -108,7 +110,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
             </div>
 
             {/* Payment Details & Action */}
-            {selectedBookingIds.size > 0 && (
+            {selectedBookingIds.length > 0 && (
                 <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
                     <h2 className="text-lg font-semibold text-text-dark mb-4">{t.paymentDetails}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
