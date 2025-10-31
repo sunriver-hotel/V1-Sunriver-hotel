@@ -98,7 +98,7 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
                                     <p className="text-sm text-gray-500">{booking.booking_id} | {booking.customer?.phone}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-semibold">฿{booking.price_per_night.toFixed(2)}</p>
+                                    <p className="font-semibold">฿{(booking.price_per_night || 0).toFixed(2)}</p>
                                     <p className="text-sm text-gray-500">{booking.check_in_date}</p>
                                 </div>
                             </div>

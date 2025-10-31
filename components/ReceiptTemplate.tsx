@@ -49,12 +49,13 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
             if (!room) return;
 
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            const key = `${room.room_type}-${room.bed_type}-${booking.price_per_night}-${booking.check_in_date}-${booking.check_out_date}`;
+            const price = booking.price_per_night || 0; // FIX: Default null price to 0
+            const key = `${room.room_type}-${room.bed_type}-${price}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
                 const existingItem = itemsMap.get(key)!;
                 existingItem.roomCount += 1;
-                existingItem.total += nights * booking.price_per_night;
+                existingItem.total += nights * price;
             } else {
                  let description = `${room.room_type}`;
                  if(language === 'th') {
@@ -73,10 +74,10 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                     description,
                     checkIn: booking.check_in_date,
                     checkOut: booking.check_out_date,
-                    unitPrice: booking.price_per_night,
+                    unitPrice: price,
                     roomCount: 1,
                     nights: nights,
-                    total: nights * booking.price_per_night,
+                    total: nights * price,
                 });
             }
         });
