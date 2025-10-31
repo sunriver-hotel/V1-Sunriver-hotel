@@ -86,7 +86,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
+    <div className="bg-white rounded-lg shadow-lg flex flex-col">
       <div className="grid grid-cols-7 text-center font-medium text-text-light border-b border-gray-200">
         {t.daysShort.map(day => (
           <div key={day} className="py-2 border-r border-gray-200 last:border-r-0 text-xs sm:text-sm">{day}</div>

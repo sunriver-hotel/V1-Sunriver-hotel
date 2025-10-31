@@ -234,13 +234,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
 
       {/* Main Content */}
       <main className="flex-grow flex flex-col overflow-y-auto min-h-0">
-        <div className="flex-grow min-h-[400px]">
+        <div>
            {isLoading ? (
-            <div className="flex justify-center items-center h-full"><p>{t.loadingBookings}</p></div>
+            <div className="flex justify-center items-center py-20"><p>{t.loadingBookings}</p></div>
           ) : error ? (
-            <div className="flex justify-center items-center h-full"><p className="text-red-500">{error}</p></div>
+            <div className="flex justify-center items-center py-20"><p className="text-red-500">{error}</p></div>
           ) : (
-            <div className="h-full overflow-x-auto pb-2">
+            <div className="overflow-x-auto pb-2">
               <Calendar 
                 currentDate={currentMonthDate} 
                 selectedDate={selectedDate}
