@@ -16,6 +16,7 @@ export const translations = {
     navDashboard: "Booking Overview",
     navRoomStatus: "Room Status",
     navStatistics: "Dashboard",
+    navCleaning: "Cleaning Status",
 
     // Dashboard
     dashboardTitle: "Booking Overview",
@@ -88,6 +89,15 @@ export const translations = {
     filterByRoomType: "Filter by Room Type:",
     allTypes: "All Types",
     totalNightsBooked: "Total Nights Booked",
+
+    // Cleaning Status Page
+    cleaningStatusTitle: "Room Cleaning Status",
+    cleaned: "Cleaned",
+    needsCleaning: "Needs Cleaning",
+    updateToClean: "Mark as Cleaned",
+    confirmCleanTitle: "Confirm Action",
+    confirmCleanMessage: "Are you sure you want to mark this room as 'Cleaned'?",
+    loadingStatuses: "Loading cleaning statuses...",
   },
   th: {
     loginTitle: "เข้าสู่ระบบสำหรับพนักงาน",
@@ -106,6 +116,7 @@ export const translations = {
     navDashboard: "ภาพรวมการจอง",
     navRoomStatus: "สถานะห้องพัก",
     navStatistics: "Dashboard",
+    navCleaning: "สถานะทำความสะอาด",
 
     // Dashboard
     dashboardTitle: "ภาพรวมการจอง",
@@ -178,5 +189,14 @@ export const translations = {
     filterByRoomType: "กรองตามประเภทห้อง:",
     allTypes: "ทุกประเภท",
     totalNightsBooked: "จำนวนคืนที่เข้าพักทั้งหมด",
+
+    // Cleaning Status Page
+    cleaningStatusTitle: "สถานะการทำความสะอาดห้อง",
+    cleaned: "ทำความสะอาดแล้ว",
+    needsCleaning: "ยังไม่ทำความสะอาด",
+    updateToClean: "เปลี่ยนเป็นทำความสะอาดแล้ว",
+    confirmCleanTitle: "ยืนยันการกระทำ",
+    confirmCleanMessage: "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะห้องนี้เป็น 'ทำความสะอาดแล้ว'?",
+    loadingStatuses: "กำลังโหลดสถานะการทำความสะอาด...",
   }
 };

@@ -3,10 +3,11 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import RoomStatusPage from './components/RoomStatusPage';
 import StatisticsPage from './components/StatisticsPage';
+import CleaningStatusPage from './components/CleaningStatusPage';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
-import type { Language, Page, Booking, Room } from './types';
-import { getRooms, getBookingsForMonth, saveBooking, deleteBooking } from './services/bookingService';
+import type { Language, Page, Booking, Room, CleaningStatus } from './types';
+import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus } from './services/bookingService';
 
 function App() {
   // Auth & Language State
@@ -20,6 +21,7 @@ function App() {
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date()); // For calendar view
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [cleaningStatuses, setCleaningStatuses] = useState<CleaningStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,11 +54,33 @@ function App() {
     }
   }, [rooms]); // Only re-create if rooms array itself changes
 
+  const fetchCleaningStatuses = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+        if (rooms.length === 0) {
+            const roomsResult = await getRooms();
+            setRooms(roomsResult);
+        }
+        const statuses = await getCleaningStatuses();
+        setCleaningStatuses(statuses);
+    } catch (err) {
+        setError('Failed to load cleaning status data.');
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [rooms.length]);
+
   useEffect(() => {
     if (isLoggedIn) {
-      fetchDashboardData(currentMonthDate);
+        if (currentPage === 'cleaning') {
+            fetchCleaningStatuses();
+        } else {
+            fetchDashboardData(currentMonthDate);
+        }
     }
-  }, [isLoggedIn, currentMonthDate, fetchDashboardData]);
+  }, [isLoggedIn, currentMonthDate, fetchDashboardData, currentPage, fetchCleaningStatuses]);
 
 
   // Event Handlers
@@ -119,6 +143,16 @@ function App() {
       throw err;
     }
   };
+  
+  const handleUpdateCleaningStatus = async (roomId: number, status: 'Clean' | 'Needs Cleaning') => {
+      try {
+        await updateCleaningStatus(roomId, status);
+        // Refresh the list after update
+        fetchCleaningStatuses();
+      } catch (err: any) {
+        alert(`Error updating cleaning status: ${err.message}`);
+      }
+  };
 
   const MainContent = () => (
     <div className="bg-pastel-bg w-full min-h-screen font-sans">
@@ -157,6 +191,17 @@ function App() {
             rooms={rooms}
             bookings={bookings}
            />
+        )}
+        {currentPage === 'cleaning' && (
+            <CleaningStatusPage
+                language={language}
+                rooms={rooms}
+                bookings={bookings}
+                cleaningStatuses={cleaningStatuses}
+                onUpdateStatus={handleUpdateCleaningStatus}
+                isLoading={isLoading}
+                error={error}
+            />
         )}
       </div>
       {isModalOpen && (

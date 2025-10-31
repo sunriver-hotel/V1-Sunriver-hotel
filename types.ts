@@ -1,5 +1,5 @@
 export type Language = 'en' | 'th';
-export type Page = 'dashboard' | 'room-status' | 'statistics';
+export type Page = 'dashboard' | 'room-status' | 'statistics' | 'cleaning';
 
 export type RoomType = 'River view' | 'Standard view' | 'Cottage';
 export type BedType = 'Double bed' | 'Twin bed';
@@ -48,4 +48,11 @@ export interface RoomStatusDetail {
   checkingOutBooking?: Booking;
   // The booking for the guest who is staying or checking in today
   stayingBooking?: Booking;
+}
+
+export interface CleaningStatus {
+    cleaning_status_id: number;
+    room_id: number;
+    status: 'Clean' | 'Needs Cleaning';
+    last_updated: string;
 }

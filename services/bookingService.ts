@@ -1,4 +1,4 @@
-import type { Room, Booking } from '../types';
+import type { Room, Booking, CleaningStatus } from '../types';
 
 /**
  * Fetches all rooms from the API.
@@ -81,6 +81,47 @@ export const deleteBooking = async (bookingId: string): Promise<{ success: boole
     return await response.json();
   } catch (error) {
     console.error('API call to deleteBooking failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all cleaning statuses from the API.
+ * This endpoint also triggers the auto-update logic on the backend.
+ */
+export const getCleaningStatuses = async (): Promise<CleaningStatus[]> => {
+  try {
+    const response = await fetch('/api/cleaning');
+    if (!response.ok) {
+      throw new Error('Failed to fetch cleaning statuses');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API call to getCleaningStatuses failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates the cleaning status for a specific room.
+ * @param roomId The ID of the room to update.
+ * @param status The new status ('Clean' or 'Needs Cleaning').
+ */
+export const updateCleaningStatus = async (roomId: number, status: 'Clean' | 'Needs Cleaning'): Promise<CleaningStatus> => {
+  try {
+    const response = await fetch('/api/cleaning', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_id: roomId, status }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      throw new Error(errorData.message || 'Failed to update cleaning status');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API call to updateCleaningStatus failed:', error);
     throw error;
   }
 };

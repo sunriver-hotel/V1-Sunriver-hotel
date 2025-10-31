@@ -24,12 +24,15 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
         <header className="bg-white shadow-md sticky top-0 z-40">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-3">
-                    <div className="flex items-center space-x-2 sm:space-x-4">
+                    <div className="flex items-center flex-wrap gap-2 sm:space-x-4">
                         <button onClick={() => onNavigate('dashboard')} className={getButtonClasses('dashboard')}>
                             {t.navDashboard}
                         </button>
                         <button onClick={() => onNavigate('room-status')} className={getButtonClasses('room-status')}>
                             {t.navRoomStatus}
+                        </button>
+                         <button onClick={() => onNavigate('cleaning')} className={getButtonClasses('cleaning')}>
+                            {t.navCleaning}
                         </button>
                         <button onClick={() => onNavigate('statistics')} className={getButtonClasses('statistics')}>
                             {t.navStatistics}
