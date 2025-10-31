@@ -88,22 +88,15 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         const createdBookings = [];
         // Loop through all selected rooms and create a booking for each
         for (const room_id of room_ids) {
-            // **THE FIX:** Use the database sequence to generate a unique number.
-            // This is atomic and safe for concurrent requests, eliminating race conditions.
-            const sequenceResult = await client.query("SELECT NEXTVAL('booking_seq') as next_val");
-            const nextVal = sequenceResult.rows[0].next_val;
-
-            const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const paddedVal = String(nextVal).padStart(3, '0');
-            const booking_id = `SRH-${datePrefix}-${paddedVal}`;
-
+            // **THE FIX:** We no longer generate the booking_id in the application code.
+            // We rely on the database's DEFAULT value which uses the `generate_booking_id()` function.
+            // This is the safest way to handle concurrent requests.
             const bookingQuery = `
-                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO public.bookings (customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
             `;
-            // If this INSERT fails for any other reason (e.g., check constraint), the entire transaction will be rolled back.
-            const bookingResult = await client.query(bookingQuery, [booking_id, customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
+            const bookingResult = await client.query(bookingQuery, [customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
             createdBookings.push(bookingResult.rows[0]);
         }
 
@@ -112,6 +105,11 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Create Booking Error:', error);
+        // The error might be because the user hasn't run the ALTER TABLE command yet.
+        // We can provide a more specific error message if we detect a NULL booking_id error.
+        if (error instanceof Error && error.message.includes('null value in column "booking_id"')) {
+             return res.status(500).json({ message: 'Database is not configured to auto-generate Booking IDs. Please run the ALTER TABLE command.' });
+        }
         return res.status(500).json({ message: 'Internal Server Error' });
     } finally {
         client.release();
