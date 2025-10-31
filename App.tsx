@@ -15,7 +15,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [language, setLanguage] = useState<Language>('th');
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const [isLogoLoading, setIsLogoLoading] = useState(false);
+  const [isLogoLoading, setIsLogoLoading] = useState(true); // Start loading immediately
   
   // Navigation State
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -34,7 +34,7 @@ function App() {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalDefaults, setModalDefaults] = useState<{ checkInDate?: string; roomIds?: number[] }>({});
 
-  // Fetch logo from database on successful login
+  // **FIX:** Fetch logo from database as soon as the app loads, BEFORE login.
   useEffect(() => {
     const fetchLogo = async () => {
       setIsLogoLoading(true);
@@ -49,10 +49,9 @@ function App() {
         setIsLogoLoading(false);
       }
     };
-    if (isLoggedIn) {
-      fetchLogo();
-    }
-  }, [isLoggedIn]);
+    fetchLogo();
+  }, []);
+
 
   // Data Fetching Logic
   const fetchDashboardData = useCallback(async (date: Date) => {
