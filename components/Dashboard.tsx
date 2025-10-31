@@ -67,12 +67,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   const occupancyMap = useMemo(() => {
     const map = new Map<string, number>();
     bookings.forEach(booking => {
-        let current = new Date(booking.check_in_date);
-        const end = new Date(booking.check_out_date);
+        // Parse date strings as UTC to avoid timezone issues.
+        const [inYear, inMonth, inDay] = booking.check_in_date.split('-').map(Number);
+        const [outYear, outMonth, outDay] = booking.check_out_date.split('-').map(Number);
+        
+        // Create Date objects in UTC. Note: month is 0-indexed for Date.UTC.
+        let current = new Date(Date.UTC(inYear, inMonth - 1, inDay));
+        const end = new Date(Date.UTC(outYear, outMonth - 1, outDay));
+
         while (current < end) {
+            // toISOString() will correctly format the date part because the Date object is in UTC.
             const dateString = current.toISOString().split('T')[0];
             map.set(dateString, (map.get(dateString) || 0) + 1);
-            current.setDate(current.getDate() + 1);
+            // Increment the day using UTC methods.
+            current.setUTCDate(current.getUTCDate() + 1);
         }
     });
     return map;
@@ -84,9 +92,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     const checkIns = bookings.filter(b => b.check_in_date === dateStr);
     const checkOuts = bookings.filter(b => b.check_out_date === dateStr);
     const staying = bookings.filter(b => {
-      const checkIn = new Date(b.check_in_date).getTime();
-      const checkOut = new Date(b.check_out_date).getTime();
-      const selected = selectedDate.getTime();
+      // Use UTC for comparison to match occupancyMap logic
+      const checkIn = new Date(Date.UTC(
+          parseInt(b.check_in_date.substring(0,4)),
+          parseInt(b.check_in_date.substring(5,7)) - 1,
+          parseInt(b.check_in_date.substring(8,10))
+      )).getTime();
+       const checkOut = new Date(Date.UTC(
+          parseInt(b.check_out_date.substring(0,4)),
+          parseInt(b.check_out_date.substring(5,7)) - 1,
+          parseInt(b.check_out_date.substring(8,10))
+      )).getTime();
+      const selected = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())).getTime();
       return selected >= checkIn && selected < checkOut;
     });
     return { checkIns, checkOuts, staying };

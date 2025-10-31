@@ -1,6 +1,5 @@
-// สิ่งที่ต้องติดตั้งก่อน: npm install pg bcrypt @types/pg @types/bcrypt
+// สิ่งที่ต้องติดตั้งก่อน: npm install pg @types/pg
 import { Pool } from 'pg';
-import bcrypt from 'bcrypt';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Connection String จะถูกดึงมาจาก Environment Variable ของ Vercel อย่างปลอดภัย
@@ -10,6 +9,7 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
+  max: 1, // เหมาะสมสำหรับ serverless environment
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // ดึงรหัสผ่านที่เข้ารหัสไว้ (hash) จากตาราง 'public.users' อย่างปลอดภัย
+    // ดึงรหัสผ่านจากตาราง 'public.users' อย่างปลอดภัย
     const query = 'SELECT password_hash FROM public.users WHERE username = $1';
     const { rows } = await pool.query(query, [username]);
 
@@ -38,10 +38,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
     }
 
-    const passwordHash = rows[0].password_hash;
+    const passwordInDb = rows[0].password_hash;
 
-    // กรณีที่ 2: เปรียบเทียบรหัสผ่านที่ผู้ใช้ส่งมากับ hash ในฐานข้อมูล
-    const isValid = await bcrypt.compare(password, passwordHash);
+    // กรณีที่ 2: เปรียบเทียบรหัสผ่านที่ผู้ใช้ส่งมากับรหัสผ่านในฐานข้อมูล (ซึ่งเป็น Plain text)
+    const isValid = password === passwordInDb;
 
     if (isValid) {
       // รหัสผ่านถูกต้อง! ล็อกอินสำเร็จ
