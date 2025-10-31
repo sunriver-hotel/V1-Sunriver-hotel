@@ -21,8 +21,7 @@ const DashboardIcon = () => (
 
 const RoomStatusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v11m0-11h18v11m0 0a2 2 0 01-2 2H5a2 2 0 01-2-2m17-9a2 2 0 00-2-2H5a2 2 0 00-2 2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 11h3v4H5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M5 19v-2a2 2 0 012-2h10a2 2 0 012 2v2M5 7V5a2 2 0 012-2h10a2 2 0 012 2v2M5 7h14" />
     </svg>
 );
 
@@ -124,7 +123,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                     </div>
                     <button
                         onClick={onLogout}
-                        className="flex items-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow bg-white text-text-dark hover:bg-gray-100 lg:bg-primary-yellow lg:text-white lg:hover:bg-opacity-90"
+                        className="flex items-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow bg-white text-text-dark hover:bg-gray-100"
                     >
                         <LogoutIcon />
                         <span className="hidden lg:inline">{t.logoutButton}</span>

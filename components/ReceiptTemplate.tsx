@@ -139,55 +139,38 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                         size: A4;
                         margin: 1.8cm;
                     }
-
-                    /* Reset body to prevent any interference */
-                    body, html {
+                    
+                    html, body {
+                        width: 100%;
+                        height: auto;
+                        margin: 0 !important;
+                        padding: 0 !important;
                         background: #fff !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        overflow: hidden !important;
                     }
 
-                    /* Hide everything that is NOT the modal wrapper */
-                    body > *:not(.receipt-modal-wrapper) {
-                        display: none !important;
+                    /* The most reliable print isolation technique */
+                    body * {
+                        visibility: hidden !important;
                     }
-                    
-                    /* Make the modal wrapper the root element for printing */
-                    .receipt-modal-wrapper {
-                        display: block !important;
-                        position: static !important;
-                        background: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
+
+                    #receipt-printable, #receipt-printable * {
+                        visibility: visible !important;
                     }
-                    
-                    /* Reset the modal's inner containers to just be simple blocks */
-                    .receipt-modal-wrapper > div,
-                    .receipt-modal-wrapper .overflow-y-auto {
-                        display: block !important;
-                        position: static !important;
+
+                    #receipt-printable {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
                         width: 100% !important;
-                        max-width: none !important;
-                        height: auto !important;
-                        max-height: none !important;
-                        overflow: visible !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                         box-shadow: none !important;
                         border: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
+                        font-size: 10pt !important;
                     }
-
-                    /* Hide the buttons bar specifically */
+                    
                     .no-print {
                         display: none !important;
-                    }
-
-                    /* Ensure the printable content itself has no extra spacing */
-                    #receipt-printable {
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        font-size: 10pt;
                     }
                 }
                 `}
