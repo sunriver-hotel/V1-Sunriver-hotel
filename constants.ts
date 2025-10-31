@@ -73,6 +73,9 @@ export const translations = {
     sortByBedType: "Bed Type",
     statusVacant: "Vacant",
     statusOccupied: "Occupied",
+    statusCheckIn: "Check-in",
+    statusCheckOut: "Check-out",
+    statusTurnover: "Check-out / Check-in",
   },
   th: {
     loginTitle: "เข้าสู่ระบบสำหรับพนักงาน",
@@ -147,6 +150,9 @@ export const translations = {
     sortByRoomType: "ประเภทห้อง",
     sortByBedType: "ประเภทเตียง",
     statusVacant: "ว่าง",
-    statusOccupied: "มีผู้เข้าพัก",
+    statusOccupied: "กำลังเข้าพัก",
+    statusCheckIn: "เช็คอิน",
+    statusCheckOut: "เช็คเอาท์",
+    statusTurnover: "เช็คเอาท์ / เช็คอิน",
   }
 };

@@ -5,6 +5,7 @@ export type RoomType = 'River view' | 'Standard view' | 'Cottage';
 export type BedType = 'Double bed' | 'Twin bed';
 export type BookingStatus = 'Paid' | 'Deposit' | 'Unpaid';
 
+export type RoomStatusType = 'Vacant' | 'Check-in' | 'Occupied' | 'Check-out' | 'Check-out / Check-in';
 
 export interface Room {
   room_id: number;
@@ -38,4 +39,13 @@ export interface Booking {
   // Joined data
   customer?: Customer;
   room?: Room;
+}
+
+export interface RoomStatusDetail {
+  room: Room;
+  status: RoomStatusType;
+  // The booking for the guest who is checking out today
+  checkingOutBooking?: Booking;
+  // The booking for the guest who is staying or checking in today
+  stayingBooking?: Booking;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Language, Room, Booking, RoomType, BedType } from '../types';
+import type { Language, Room, Booking, RoomType, RoomStatusDetail, RoomStatusType } from '../types';
 import { translations } from '../constants';
 
 // Helper function to format date correctly
@@ -11,12 +11,6 @@ const formatDateForInput = (date: Date): string => {
 };
 
 type SortByType = 'room_number' | 'room_type' | 'bed_type';
-
-interface RoomStatus {
-    room: Room;
-    status: 'Vacant' | 'Occupied';
-    booking: Booking | null;
-}
 
 interface RoomStatusPageProps {
     language: Language;
@@ -31,25 +25,48 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
     const [viewDate, setViewDate] = useState<string>(formatDateForInput(new Date()));
     const [sortBy, setSortBy] = useState<SortByType>('room_number');
 
-    const roomStatuses = useMemo<RoomStatus[]>(() => {
+    const roomStatuses = useMemo<RoomStatusDetail[]>(() => {
+        const checkingOutMap = new Map<number, Booking>();
+        const stayingMap = new Map<number, Booking>();
         const viewDateTime = new Date(viewDate + 'T00:00:00Z').getTime();
 
-        const occupiedRoomsMap = new Map<number, Booking>();
         bookings.forEach(booking => {
             const checkInTime = new Date(booking.check_in_date + 'T00:00:00Z').getTime();
             const checkOutTime = new Date(booking.check_out_date + 'T00:00:00Z').getTime();
+
+            // Is a guest checking out today?
+            if (booking.check_out_date === viewDate) {
+                checkingOutMap.set(booking.room_id, booking);
+            }
+
+            // Is a guest staying today (which includes checking in)?
             if (viewDateTime >= checkInTime && viewDateTime < checkOutTime) {
-                occupiedRoomsMap.set(booking.room_id, booking);
+                stayingMap.set(booking.room_id, booking);
             }
         });
 
-        // FIX: Explicitly type the statuses array to ensure type compatibility with RoomStatus[].
-        const statuses: RoomStatus[] = rooms.map(room => {
-            const booking = occupiedRoomsMap.get(room.room_id) || null;
+        const statuses: RoomStatusDetail[] = rooms.map(room => {
+            const checkingOutBooking = checkingOutMap.get(room.room_id);
+            const stayingBooking = stayingMap.get(room.room_id);
+            let status: RoomStatusType = 'Vacant';
+
+            if (stayingBooking && checkingOutBooking) {
+                status = 'Check-out / Check-in';
+            } else if (stayingBooking) {
+                if (stayingBooking.check_in_date === viewDate) {
+                    status = 'Check-in';
+                } else {
+                    status = 'Occupied';
+                }
+            } else if (checkingOutBooking) {
+                status = 'Check-out';
+            }
+
             return {
                 room,
-                status: booking ? 'Occupied' : 'Vacant',
-                booking,
+                status,
+                checkingOutBooking: checkingOutBooking || undefined,
+                stayingBooking: stayingBooking || undefined,
             };
         });
         
@@ -72,20 +89,25 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
 
     }, [viewDate, rooms, bookings, sortBy]);
 
-    const handleRoomClick = (status: RoomStatus) => {
-        if (status.status === 'Vacant') {
+    const handleRoomClick = (status: RoomStatusDetail) => {
+        // A room with a check-out is available for a new booking on the same day.
+        if (status.status === 'Vacant' || status.status === 'Check-out') {
             onBookRoom(viewDate, [status.room.room_id]);
-        } else if (status.booking) {
-            onEditBooking(status.booking);
+        } 
+        // If a guest is staying or checking in, edit their booking.
+        else if (status.stayingBooking) {
+            onEditBooking(status.stayingBooking);
         }
     };
 
-    const getRoomColor = (roomType: RoomType): string => {
-        switch (roomType) {
-            case 'River view': return 'border-pastel-blue';
-            case 'Standard view': return 'border-pastel-green';
-            case 'Cottage': return 'border-pastel-purple';
-            default: return 'border-gray-300';
+    const getStatusColors = (status: RoomStatusType): { cardBg: string; badgeBg: string; text: string; border: string } => {
+        switch (status) {
+            case 'Vacant': return { cardBg: 'bg-white', badgeBg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400' };
+            case 'Check-in': return { cardBg: 'bg-blue-50', badgeBg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400' };
+            case 'Occupied': return { cardBg: 'bg-yellow-50', badgeBg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400' };
+            case 'Check-out': return { cardBg: 'bg-orange-50', badgeBg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400' };
+            case 'Check-out / Check-in': return { cardBg: 'bg-purple-50', badgeBg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400' };
+            default: return { cardBg: 'bg-gray-50', badgeBg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-400' };
         }
     };
     
@@ -100,6 +122,16 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
             </button>
         );
     }
+
+    // FIX: Removed the overly broad type annotation to allow TypeScript to infer a more specific type.
+    // This fixes the error where `statusText` was inferred as a type that included objects, which are not valid React nodes.
+    const statusKeyMap = {
+        'Vacant': 'statusVacant',
+        'Occupied': 'statusOccupied',
+        'Check-in': 'statusCheckIn',
+        'Check-out': 'statusCheckOut',
+        'Check-out / Check-in': 'statusTurnover'
+    };
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -127,29 +159,46 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {roomStatuses.map(status => (
-                    <div 
-                        key={status.room.room_id} 
-                        onClick={() => handleRoomClick(status)}
-                        className={`p-4 rounded-lg shadow-sm cursor-pointer transition-transform transform hover:scale-105 border-l-4 ${getRoomColor(status.room.room_type)}
-                            ${status.status === 'Vacant' ? 'bg-white' : 'bg-yellow-50'}
-                        `}
-                    >
-                        <div className="flex justify-between items-start">
-                             <h3 className="text-lg font-bold text-text-dark">{status.room.room_number}</h3>
-                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.status === 'Vacant' ? 'bg-green-100 text-green-800' : 'bg-yellow-200 text-yellow-800'}`}>
-                                {status.status === 'Vacant' ? t.statusVacant : t.statusOccupied}
-                             </span>
-                        </div>
-                        <p className="text-sm text-text-light mt-1">{status.room.room_type}</p>
-                        <p className="text-xs text-gray-500">{status.room.bed_type}</p>
-                        {status.booking && status.booking.customer && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                                <p className="text-sm font-medium truncate">{status.booking.customer.customer_name}</p>
+                {roomStatuses.map(status => {
+                    const colors = getStatusColors(status.status);
+                    const statusText = t[statusKeyMap[status.status]];
+
+                    return (
+                        <div 
+                            key={status.room.room_id} 
+                            onClick={() => handleRoomClick(status)}
+                            className={`p-4 rounded-lg shadow-sm cursor-pointer transition-transform transform hover:scale-105 border-l-4 ${colors.border} ${colors.cardBg}`}
+                        >
+                            <div className="flex justify-between items-start">
+                                 <h3 className="text-lg font-bold text-text-dark">{status.room.room_number}</h3>
+                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full text-center ${colors.badgeBg} ${colors.text}`}>
+                                    {statusText}
+                                 </span>
                             </div>
-                        )}
-                    </div>
-                ))}
+                            <p className="text-sm text-text-light mt-1">{status.room.room_type}</p>
+                            <p className="text-xs text-gray-500">{status.room.bed_type}</p>
+                            
+                            {(status.checkingOutBooking || status.stayingBooking) && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                                    {status.checkingOutBooking?.customer && (
+                                        <div>
+                                            <span className="text-xs text-orange-600 font-semibold">{t.checkOuts}: </span>
+                                            <p className="text-sm font-medium truncate">{status.checkingOutBooking.customer.customer_name}</p>
+                                        </div>
+                                    )}
+                                    {status.stayingBooking?.customer && (
+                                         <div>
+                                            <span className="text-xs text-blue-600 font-semibold">
+                                                {status.status === 'Check-in' || status.status === 'Check-out / Check-in' ? t.checkIns : t.staying}:
+                                            </span>
+                                            <p className="text-sm font-medium truncate">{status.stayingBooking.customer.customer_name}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
