@@ -19,18 +19,24 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
     const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [showReceipt, setShowReceipt] = useState(false);
     
+    // **THE DEFINITIVE FIX**: Pre-filter the bookings to ensure every record has a valid ID.
+    // This prevents crashes from invalid data being used as React keys or in maps, which causes a white screen.
+    const validBookings = useMemo(() => {
+        return bookings.filter(b => b && b.booking_id);
+    }, [bookings]);
+
     const filteredBookings = useMemo(() => {
         const lowercasedTerm = searchTerm.toLowerCase();
         if (!lowercasedTerm) {
-            return bookings.slice(0, 10); // Show latest 10 by default
+            return validBookings.slice(0, 10); // Show latest 10 by default from the valid list
         }
-        return bookings.filter(b => 
+        return validBookings.filter(b => 
             (b.customer?.customer_name?.toLowerCase().includes(lowercasedTerm)) ||
             (b.customer?.phone?.includes(lowercasedTerm)) ||
             (b.booking_id?.toLowerCase().includes(lowercasedTerm)) ||
             (b.check_in_date?.includes(lowercasedTerm))
         );
-    }, [searchTerm, bookings]);
+    }, [searchTerm, validBookings]);
 
     const handleSelectBooking = (bookingId: string) => {
         setSelectedBookingIds(prev => {
@@ -52,9 +58,10 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
 
     const selectedBookings = useMemo(() => {
         if (selectedBookingIds.length === 0) return [];
-        const bookingMap = new Map(bookings.map(b => [b.booking_id, b]));
+        // Use the sanitized validBookings array to build the map
+        const bookingMap = new Map(validBookings.map(b => [b.booking_id, b]));
         return selectedBookingIds.map(id => bookingMap.get(id)).filter((b): b is Booking => !!b);
-    }, [selectedBookingIds, bookings]);
+    }, [selectedBookingIds, validBookings]);
 
     if (isLoading) {
         return <div className="text-center p-8">{t.loadingBookings}</div>;
@@ -82,30 +89,24 @@ const ReceiptPage: React.FC<ReceiptPageProps> = ({ language, logoSrc, bookings, 
                  </h2>
                 <div className="max-h-80 overflow-y-auto space-y-2 pr-2">
                     {filteredBookings.length > 0 ? (
-                        filteredBookings.map((booking, index) => {
-                            const bookingId = booking.booking_id;
-                            // Do not render bookings without an ID, as they cannot be selected or tracked.
-                            if (!bookingId) return null; 
-
-                            return (
-                                <div key={bookingId} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedBookingIds.includes(bookingId)}
-                                        onChange={() => handleSelectBooking(bookingId)}
-                                        className="h-5 w-5 rounded border-gray-300 text-primary-yellow focus:ring-primary-yellow"
-                                    />
-                                    <div className="flex-grow">
-                                        <p className="font-semibold">{booking.customer?.customer_name || '-'} - <span className="font-normal text-text-light">{booking.room?.room_number || '-'}</span></p>
-                                        <p className="text-sm text-gray-500">{bookingId} | {booking.customer?.phone || '-'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-semibold">฿{(booking.price_per_night || 0).toFixed(2)}</p>
-                                        <p className="text-sm text-gray-500">{booking.check_in_date || '-'}</p>
-                                    </div>
+                        filteredBookings.map(booking => (
+                            <div key={booking.booking_id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBookingIds.includes(booking.booking_id)}
+                                    onChange={() => handleSelectBooking(booking.booking_id)}
+                                    className="h-5 w-5 rounded border-gray-300 text-primary-yellow focus:ring-primary-yellow"
+                                />
+                                <div className="flex-grow">
+                                    <p className="font-semibold">{booking.customer?.customer_name || '-'} - <span className="font-normal text-text-light">{booking.room?.room_number || '-'}</span></p>
+                                    <p className="text-sm text-gray-500">{booking.booking_id} | {booking.customer?.phone || '-'}</p>
                                 </div>
-                            );
-                        })
+                                <div className="text-right">
+                                    <p className="font-semibold">฿{(booking.price_per_night || 0).toFixed(2)}</p>
+                                    <p className="text-sm text-gray-500">{booking.check_in_date || '-'}</p>
+                                </div>
+                            </div>
+                        ))
                     ) : (
                         <p className="text-text-light italic">{t.noBookingsFound}</p>
                     )}
