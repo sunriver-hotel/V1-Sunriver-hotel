@@ -125,8 +125,11 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
 };
 
 const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
-  const { id } = req.query;
-  const { customer, room_id, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
+  const { booking_id, customer, room_id, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
+
+  if (!booking_id) {
+    return res.status(400).json({ message: 'Booking ID is required for update.'});
+  }
 
   if (!customer || !customer.customer_id) {
     return res.status(400).json({ message: 'Customer ID is required for update.' });
@@ -149,7 +152,7 @@ const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
         WHERE booking_id = $7
         RETURNING *;
     `;
-    const bookingResult = await client.query(bookingQuery, [room_id, check_in_date, check_out_date, status, price_per_night, deposit, id]);
+    const bookingResult = await client.query(bookingQuery, [room_id, check_in_date, check_out_date, status, price_per_night, deposit, booking_id]);
 
     await client.query('COMMIT');
 

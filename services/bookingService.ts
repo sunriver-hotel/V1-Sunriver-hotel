@@ -40,7 +40,7 @@ export const getBookingsForMonth = async (year: number, month: number): Promise<
  */
 export const saveBooking = async (bookingData: Partial<Booking>): Promise<Booking> => {
   const isEditing = !!bookingData.booking_id;
-  const url = isEditing ? `/api/bookings/${bookingData.booking_id}` : '/api/bookings';
+  const url = '/api/bookings';
   const method = isEditing ? 'PUT' : 'POST';
 
   try {
