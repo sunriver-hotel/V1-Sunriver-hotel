@@ -245,6 +245,7 @@ function App() {
               language={language}
               setLanguage={setLanguage}
               logoSrc={logoSrc}
+              onLogoUpload={handleLogoUpload}
             />
         </div>
       ) : (

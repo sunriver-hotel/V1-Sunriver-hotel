@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { Language } from '../types';
 import { translations } from '../constants';
 import { login } from '../services/authService';
@@ -9,6 +9,7 @@ interface LoginPageProps {
   language: Language;
   setLanguage: (lang: Language) => void;
   logoSrc: string | null;
+  onLogoUpload: (logoDataUrl: string) => void;
 }
 
 const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => {
@@ -34,11 +35,12 @@ const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Langu
   );
 };
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc, onLogoUpload }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = translations[language];
 
@@ -57,15 +59,47 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
       setIsLoading(false);
     }
   };
+  
+  const handleLogoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          onLogoUpload(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg m-4">
       <div className="text-center">
-        {logoSrc ? (
-            <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-20 w-20 rounded-full object-cover mb-4" />
-        ) : (
-            <div className="mx-auto h-20 w-20 rounded-full bg-primary-yellow mb-4"></div>
-        )}
+        <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+            aria-hidden="true"
+        />
+        <div
+            onClick={handleLogoClick}
+            className="cursor-pointer group relative inline-block mb-4"
+            title={t.logoUploadTooltip}
+        >
+            {logoSrc ? (
+                <img src={logoSrc} alt="Hotel Logo" className="mx-auto h-20 w-20 rounded-full object-cover" />
+            ) : (
+                <div className="mx-auto h-20 w-20 rounded-full bg-primary-yellow"></div>
+            )}
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
+        </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
       </div>
 
