@@ -135,57 +135,34 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                 }
                 /* --- DEFINITIVE PRINT STYLES --- */
                 @media print {
-                    /* Define A4 page size and margins */
                     @page {
                         size: A4;
-                        margin: 1.8cm;
+                        margin: 1.8cm; /* Standard A4 margin */
                     }
 
-                    /* Hide everything in the body by default */
-                    body > * {
-                        display: none !important;
+                    /* 1. Hide everything by default */
+                    body * {
+                        visibility: hidden;
                     }
 
-                    /* Explicitly show our modal wrapper and ensure it's a block element */
-                    .receipt-modal-wrapper {
-                        display: block !important;
-                    }
-
-                    /* Dismantle the modal's screen layout for printing */
-                    .receipt-modal-wrapper,
-                    .receipt-modal-wrapper > div,
-                    .receipt-modal-wrapper > div > div {
-                        position: static !important;
-                        display: block !important;
-                        width: 100% !important;
-                        height: auto !important;
-                        max-height: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        background: none !important;
-                        box-shadow: none !important;
-                        overflow: visible !important;
-                    }
-
-                    /* Hide the non-printable header within the modal */
-                    .no-print {
-                        display: none !important;
-                    }
-
-                    /* Make sure the printable area and its children are visible */
+                    /* 2. Make the printable section and EVERYTHING inside it visible */
                     #receipt-printable, #receipt-printable * {
                         visibility: visible;
                     }
 
-                    /* Style the actual receipt content for printing */
+                    /* 3. Take the printable section out of the normal layout flow 
+                          and position it at the top-left of the printed page. */
                     #receipt-printable {
-                        font-size: 10pt;
-                        min-height: auto !important;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%; /* Ensure it spans the printable width */
+                        font-size: 10pt; /* Adjust font size for print */
                     }
                     
-                    /* Fine-tune spacing to prevent overflow */
-                    .signature-section-print-margin {
-                        margin-top: 4rem !important;
+                    /* Hide the UI buttons that are inside the modal but outside the printable area */
+                    .no-print {
+                        display: none;
                     }
                 }
                 `}
