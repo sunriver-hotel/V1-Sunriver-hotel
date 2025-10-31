@@ -223,11 +223,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl sm:text-2xl font-bold text-text-dark mb-4">{existingBooking ? t.editBooking : t.newBooking}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md">
-            <h3 className="col-span-full font-semibold text-base sm:text-lg">Customer Information</h3>
+      <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl sm:text-2xl font-bold text-text-dark mb-6">{existingBooking ? t.editBooking : t.newBooking}</h2>
+        <form onSubmit={handleSubmit}>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
+            {/* Customer Info */}
             <div>
               <label className="block text-sm font-medium text-text-dark">{t.customerName}</label>
               <input type="text" name="customer_name" value={formData.customer_name} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
@@ -244,49 +245,53 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
               <label className="block text-sm font-medium text-text-dark">{t.taxId}</label>
               <input type="text" name="tax_id" value={formData.tax_id} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
             </div>
-             <div className="md:col-span-2">
+             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-text-dark">{t.address}</label>
-              <textarea name="address" value={formData.address} onChange={handleChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+              <textarea name="address" value={formData.address} onChange={handleChange} rows={1} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow resize-y" />
             </div>
-          </div>
-          
-           <div className="border p-4 rounded-md space-y-4">
-            <h3 className="font-semibold text-base sm:text-lg">Booking Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-dark">{t.checkInDate}</label>
-                  <input type="date" name="check_in_date" value={formData.check_in_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
-                </div>
-                 <div>
-                  <label className="block text-sm font-medium text-text-dark">{t.checkOutDate}</label>
-                  <input type="date" name="check_out_date" value={formData.check_out_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
-                </div>
-            </div>
+            
+            {/* Divider */}
+            <div className="col-span-full border-t border-gray-200 my-2"></div>
+
+            {/* Booking Info */}
             <div>
+              <label className="block text-sm font-medium text-text-dark">{t.checkInDate}</label>
+              <input type="date" name="check_in_date" value={formData.check_in_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-text-dark">{t.checkOutDate}</label>
+              <input type="date" name="check_out_date" value={formData.check_out_date} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+            </div>
+            <div className="hidden lg:block"></div> {/* Spacer for grid */}
+             
+            <div className="col-span-full">
                 <label className="block text-sm font-medium text-text-dark">{t.room}</label>
                 {renderRoomSelector()}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-text-dark">{t.pricePerNight}</label>
-                    <input type="number" name="price_per_night" value={formData.price_per_night} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-text-dark">{t.status}</label>
-                    <select name="status" value={formData.status} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow">
-                        {(Object.keys(t.statuses) as BookingStatus[]).map(statusKey => (
-                        <option key={statusKey} value={statusKey}>{t.statuses[statusKey]}</option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-text-dark">{t.deposit}</label>
-                    <input type="number" name="deposit" value={formData.deposit} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
-                </div>
+            
+            {/* Divider */}
+            <div className="col-span-full border-t border-gray-200 my-2"></div>
+
+            <div>
+                <label className="block text-sm font-medium text-text-dark">{t.pricePerNight}</label>
+                <input type="number" name="price_per_night" value={formData.price_per_night} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-text-dark">{t.status}</label>
+                <select name="status" value={formData.status} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow">
+                    {(Object.keys(t.statuses) as BookingStatus[]).map(statusKey => (
+                    <option key={statusKey} value={statusKey}>{t.statuses[statusKey]}</option>
+                    ))}
+                </select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-text-dark">{t.deposit}</label>
+                <input type="number" name="deposit" value={formData.deposit} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-4">
+
+          <div className="flex justify-between items-center pt-6">
              <div>
                 {existingBooking && onDelete && (
                     <button 
