@@ -35,10 +35,11 @@ export const getBookingsForMonth = async (year: number, month: number): Promise<
 };
 
 /**
- * Creates or updates a booking.
+ * Creates or updates a booking. The payload shape differs for create vs. update.
+ * For create, it expects `room_ids` array. For update, it expects a single `room_id`.
  * @param bookingData The booking data to save.
  */
-export const saveBooking = async (bookingData: Partial<Booking>): Promise<Booking> => {
+export const saveBooking = async (bookingData: any): Promise<Booking | Booking[]> => {
   const isEditing = !!bookingData.booking_id;
   const url = '/api/bookings';
   const method = isEditing ? 'PUT' : 'POST';
@@ -51,12 +52,35 @@ export const saveBooking = async (bookingData: Partial<Booking>): Promise<Bookin
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
       throw new Error(errorData.message || 'Failed to save booking');
     }
     return await response.json();
   } catch (error) {
     console.error('API call to saveBooking failed:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a booking by its ID.
+ * @param bookingId The ID of the booking to delete.
+ */
+export const deleteBooking = async (bookingId: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await fetch('/api/bookings', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id: bookingId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+      throw new Error(errorData.message || 'Failed to delete booking');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API call to deleteBooking failed:', error);
     throw error;
   }
 };

@@ -14,6 +14,7 @@ interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (bookingData: Omit<Partial<Booking>, 'room_id' | 'booking_id'>, roomIds: number[]) => Promise<void>;
+  onDelete?: (bookingId: string) => Promise<void>;
   language: Language;
   rooms: Room[];
   existingBooking: Booking | null;
@@ -21,7 +22,7 @@ interface BookingModalProps {
   defaultCheckInDate: string | null;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, language, rooms, existingBooking, bookings, defaultCheckInDate }) => {
+const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, onDelete, language, rooms, existingBooking, bookings, defaultCheckInDate }) => {
   const t = translations[language];
   
   const getInitialState = (defaultDate: string | null) => {
@@ -49,6 +50,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
 
   const [formData, setFormData] = useState(getInitialState(defaultCheckInDate));
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -113,10 +115,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
     try {
         await onSave(payload, formData.selectedRoomIds);
     } catch(error) {
-        // Error is already alerted by the parent component, just need to stop loading state
         console.error("Saving failed:", error)
     } finally {
         setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!existingBooking || !onDelete) return;
+
+    if (window.confirm(t.deleteConfirm)) {
+        setIsDeleting(true);
+        try {
+            await onDelete(existingBooking.booking_id);
+        } catch (error) {
+            console.error("Deletion failed:", error);
+        } finally {
+            setIsDeleting(false);
+        }
     }
   };
   
@@ -270,9 +286,23 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-dark rounded-md hover:bg-gray-300">{t.cancel}</button>
-            <button type="submit" disabled={isSaving} className="px-4 py-2 bg-primary-yellow text-white rounded-md hover:bg-opacity-90 disabled:bg-yellow-300">{isSaving ? 'Saving...' : t.save}</button>
+          <div className="flex justify-between items-center pt-4">
+             <div>
+                {existingBooking && onDelete && (
+                    <button 
+                        type="button" 
+                        onClick={handleDelete} 
+                        disabled={isDeleting}
+                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300"
+                    >
+                        {isDeleting ? t.deleting : t.deleteBooking}
+                    </button>
+                )}
+             </div>
+             <div className="flex space-x-2">
+                <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-dark rounded-md hover:bg-gray-300">{t.cancel}</button>
+                <button type="submit" disabled={isSaving || isDeleting} className="px-4 py-2 bg-primary-yellow text-white rounded-md hover:bg-opacity-90 disabled:bg-yellow-300">{isSaving ? t.saving : t.save}</button>
+             </div>
           </div>
         </form>
       </div>

@@ -45,7 +45,11 @@ export const translations = {
     status: "Booking Status",
     deposit: "Deposit (Optional)",
     save: "Save",
+    saving: "Saving...",
     cancel: "Cancel",
+    deleteBooking: "Delete Booking",
+    deleting: "Deleting...",
+    deleteConfirm: "Are you sure you want to delete this booking? This action cannot be undone.",
     statuses: {
       'Paid': 'Paid',
       'Deposit': 'Deposit',
@@ -102,7 +106,11 @@ export const translations = {
     status: "สถานะการจอง",
     deposit: "เงินมัดจำ (ไม่บังคับ)",
     save: "บันทึก",
+    saving: "กำลังบันทึก...",
     cancel: "ยกเลิก",
+    deleteBooking: "ลบการจอง",
+    deleting: "กำลังลบ...",
+    deleteConfirm: "คุณแน่ใจหรือไม่ว่าต้องการลบการจองนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
     statuses: {
       'Paid': 'ชำระแล้ว',
       'Deposit': 'มัดจำ',

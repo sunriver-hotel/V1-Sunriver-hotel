@@ -14,12 +14,13 @@ const generateBookingId = async (client: any): Promise<string> => {
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, '');
     
+    // This logic needs to be robust for concurrent requests.
+    // We get a count of ALL bookings for today to determine the next number in the sequence.
     const sequenceQuery = `
-        SELECT COUNT(*) as count 
-        FROM public.bookings 
-        WHERE booking_id LIKE $1;
+        SELECT count(*) FROM public.bookings WHERE booking_id LIKE $1
     `;
     const sequenceResult = await client.query(sequenceQuery, [`SRH-${datePrefix}-%`]);
+    // The next number is today's count + 1.
     const nextVal = parseInt(sequenceResult.rows[0].count, 10) + 1;
     const paddedVal = String(nextVal).padStart(3, '0');
     
@@ -35,7 +36,7 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
 
   try {
     const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
-    const endDate = new Date(Date.UTC(Number(year), Number(month), 0));
+    const endDate = new Date(Date.UTC(Number(year), Number(month), 1)); // Go to the start of the next month
     
     const query = `
       SELECT 
@@ -61,7 +62,7 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
       FROM public.bookings b
       JOIN public.customers c ON b.customer_id = c.customer_id
       JOIN public.rooms r ON b.room_id = r.room_id
-      WHERE b.check_in_date <= $2 AND b.check_out_date >= $1
+      WHERE b.check_in_date < $2 AND b.check_out_date > $1
     `;
 
     const { rows } = await pool.query(query, [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]);
@@ -73,9 +74,10 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
 };
 
 const createBooking = async (req: VercelRequest, res: VercelResponse) => {
-    const { customer, room_id, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
+    // Expect room_ids array for multi-room bookings
+    const { customer, room_ids, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
     
-    if (!customer || !customer.customer_name || !customer.phone || !room_id || !check_in_date || !check_out_date) {
+    if (!customer || !customer.customer_name || !customer.phone || !Array.isArray(room_ids) || room_ids.length === 0 || !check_in_date || !check_out_date) {
         return res.status(400).json({ message: 'Missing required fields for booking.' });
     }
 
@@ -84,18 +86,16 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         await client.query('BEGIN');
 
         let customerId = customer.customer_id;
-        // Simple upsert logic for customer based on phone
+        // Upsert customer based on phone number to avoid duplicates
         if (!customerId) {
             const existingCustomer = await client.query('SELECT customer_id FROM public.customers WHERE phone = $1', [customer.phone]);
             if (existingCustomer.rows.length > 0) {
                 customerId = existingCustomer.rows[0].customer_id;
-                // Update existing customer info
                 await client.query(
                     'UPDATE public.customers SET customer_name = $1, email = $2, address = $3, tax_id = $4 WHERE customer_id = $5',
                     [customer.customer_name, customer.email, customer.address, customer.tax_id, customerId]
                 );
             } else {
-                // Insert new customer
                 const newCustomer = await client.query(
                     'INSERT INTO public.customers (customer_name, phone, email, address, tax_id) VALUES ($1, $2, $3, $4, $5) RETURNING customer_id',
                     [customer.customer_name, customer.phone, customer.email, customer.address, customer.tax_id]
@@ -104,17 +104,29 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
             }
         }
         
-        const booking_id = await generateBookingId(client);
-
-        const bookingQuery = `
-            INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING *;
-        `;
-        const bookingResult = await client.query(bookingQuery, [booking_id, customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
+        const createdBookings = [];
+        // Loop through all selected rooms and create a booking for each within the same transaction
+        for (const room_id of room_ids) {
+            // A simple but not perfectly concurrent-safe way to generate IDs.
+            // For true high concurrency, a database sequence is better.
+            const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const sequenceQuery = `SELECT count(*) FROM public.bookings WHERE booking_id LIKE $1`;
+            const sequenceResult = await client.query(sequenceQuery, [`SRH-${datePrefix}-%`]);
+            const nextVal = parseInt(sequenceResult.rows[0].count, 10) + 1 + createdBookings.length; // Adjust for bookings in this transaction
+            const paddedVal = String(nextVal).padStart(3, '0');
+            const booking_id = `SRH-${datePrefix}-${paddedVal}`;
+            
+            const bookingQuery = `
+                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING *;
+            `;
+            const bookingResult = await client.query(bookingQuery, [booking_id, customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
+            createdBookings.push(bookingResult.rows[0]);
+        }
 
         await client.query('COMMIT');
-        return res.status(201).json(bookingResult.rows[0]);
+        return res.status(201).json(createdBookings);
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Create Booking Error:', error);
@@ -127,25 +139,19 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
 const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
   const { booking_id, customer, room_id, check_in_date, check_out_date, status, price_per_night, deposit } = req.body;
 
-  if (!booking_id) {
-    return res.status(400).json({ message: 'Booking ID is required for update.'});
-  }
-
-  if (!customer || !customer.customer_id) {
-    return res.status(400).json({ message: 'Customer ID is required for update.' });
+  if (!booking_id || !customer || !customer.customer_id) {
+    return res.status(400).json({ message: 'Booking ID and Customer ID are required for update.'});
   }
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     
-    // Update customer
     await client.query(
         'UPDATE public.customers SET customer_name = $1, phone = $2, email = $3, address = $4, tax_id = $5 WHERE customer_id = $6',
         [customer.customer_name, customer.phone, customer.email, customer.address, customer.tax_id, customer.customer_id]
     );
 
-    // Update booking
     const bookingQuery = `
         UPDATE public.bookings 
         SET room_id = $1, check_in_date = $2, check_out_date = $3, status = $4, price_per_night = $5, deposit = $6
@@ -169,6 +175,22 @@ const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
+const deleteBooking = async (req: VercelRequest, res: VercelResponse) => {
+    const { booking_id } = req.body;
+    if (!booking_id) {
+        return res.status(400).json({ message: 'Booking ID is required.' });
+    }
+    try {
+        const result = await pool.query('DELETE FROM public.bookings WHERE booking_id = $1', [booking_id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Booking not found.' });
+        }
+        return res.status(200).json({ success: true, message: 'Booking deleted successfully.' });
+    } catch (error) {
+        console.error('Delete Booking Error:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
@@ -177,8 +199,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return createBooking(req, res);
   } else if (req.method === 'PUT') {
     return updateBooking(req, res);
+  } else if (req.method === 'DELETE') {
+    return deleteBooking(req, res);
   } else {
-    res.setHeader('Allow', ['GET', 'POST', 'PUT']);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 }

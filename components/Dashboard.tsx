@@ -4,7 +4,7 @@ import { translations } from '../constants';
 import Calendar from './Calendar';
 import DailySummary from './DailySummary';
 import BookingModal from './BookingModal';
-import { getRooms, getBookingsForMonth, saveBooking } from '../services/bookingService';
+import { getRooms, getBookingsForMonth, saveBooking, deleteBooking } from '../services/bookingService';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -71,6 +71,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     today.setHours(0,0,0,0);
     setSelectedDate(today);
   };
+    const handleSummaryDateChange = (dateString: string) => {
+        const [year, month, day] = dateString.split('-').map(Number);
+        const newDate = new Date(year, month - 1, day);
+        newDate.setHours(0,0,0,0);
+        setSelectedDate(newDate);
+
+        // Also update calendar if month/year is different
+        if (newDate.getFullYear() !== currentMonthDate.getFullYear() || newDate.getMonth() !== currentMonthDate.getMonth()) {
+            setCurrentMonthDate(newDate);
+        }
+    };
   
   // Occupancy Calculation
   const occupancyMap = useMemo(() => {
@@ -144,28 +155,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     setDefaultCheckInDate(null);
   };
   
-  // Updated to handle multiple room bookings in a single transaction-like manner from the frontend
   const handleSaveBooking = async (bookingData: Omit<Partial<Booking>, 'room_id' | 'booking_id'>, roomIds: number[]) => {
     try {
-        const savePromises = roomIds.map(roomId => {
-            const singleBookingData: Partial<Booking> = {
-                ...bookingData,
-                room_id: roomId,
-            };
-            // If editing, the original booking_id must be passed. This logic assumes editing only affects one room.
-            if (editingBooking && roomIds.length === 1 && roomId === editingBooking.room_id) {
-                singleBookingData.booking_id = editingBooking.booking_id;
-            }
-            return saveBooking(singleBookingData);
-        });
-
-        await Promise.all(savePromises);
-
-        handleCloseModal();
-        fetchDashboardData(); // Re-fetch data to show all updates
+      let payload;
+      // For editing, we still handle it as a single booking update.
+      if (editingBooking) {
+        payload = {
+          ...bookingData,
+          booking_id: editingBooking.booking_id,
+          room_id: roomIds[0], // Editing only supports one room
+        };
+      } else {
+        // For creating, we send all roomIds in one request to prevent race conditions.
+        payload = {
+          ...bookingData,
+          room_ids: roomIds,
+        };
+      }
+      await saveBooking(payload);
+      handleCloseModal();
+      fetchDashboardData();
     } catch (err: any) {
-        alert(`Error saving booking(s): ${err.message}`);
-        // Re-throw to allow modal to handle its saving state
+      alert(`Error saving booking(s): ${err.message}`);
+      throw err;
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    try {
+        await deleteBooking(bookingId);
+        handleCloseModal();
+        fetchDashboardData();
+    } catch (err: any) {
+        alert(`Error deleting booking: ${err.message}`);
         throw err;
     }
   };
@@ -230,6 +252,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
         </div>
         <DailySummary 
             selectedDate={selectedDate}
+            onDateChange={handleSummaryDateChange}
             language={language}
             checkIns={checkIns}
             checkOuts={checkOuts}
@@ -243,6 +266,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSaveBooking}
+            onDelete={handleDeleteBooking}
             language={language}
             rooms={rooms}
             existingBooking={editingBooking}
