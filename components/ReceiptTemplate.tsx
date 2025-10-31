@@ -1,157 +1,181 @@
 import React, { useMemo } from 'react';
-import type { Language, Booking } from '../types';
-import { translations } from '../constants';
+import { useLanguage } from '../hooks/useLanguage';
+import type { Language } from '../types';
 
-interface ReceiptTemplateProps {
-    isOpen: boolean;
-    onClose: () => void;
-    bookings: Booking[];
-    logoSrc: string | null;
-    language: Language;
-    paymentMethod: 'Cash' | 'Transfer';
-    paymentDate: string;
+interface Booking {
+  room: {
+    room_number: string;
+    room_type: string;
+  } | null;
+  check_in_date: string;
+  check_out_date: string;
+  price_per_night: number;
+  payment_status?: string;
 }
 
-interface GroupedItem {
-    description: string;
-    checkIn: string;
-    checkOut: string;
-    unitPrice: number;
-    roomCount: number;
-    nights: number;
-    total: number;
+interface Customer {
+  customer_name: string;
+  customer_tax_id?: string;
+  customer_tel?: string;
+  customer_tax_address?: string;
 }
 
-const calculateNights = (checkIn: string | null | undefined, checkOut: string | null | undefined): number => {
-    if (!checkIn || !checkOut) return 1;
-    const start = new Date(checkIn + 'T00:00:00Z').getTime();
-    const end = new Date(checkOut + 'T00:00:00Z').getTime();
-    if (isNaN(start) || isNaN(end) || end <= start) return 1;
-    const duration = (end - start) / (1000 * 60 * 60 * 24);
-    return Math.max(1, Math.round(duration));
+interface ReceiptPageProps {
+  bookings: Booking[];
+  paymentDate: string;
+}
+
+const ReceiptPage: React.FC<ReceiptPageProps> = ({ bookings, paymentDate }) => {
+  const { language } = useLanguage();
+
+  const translations = {
+    th: {
+      receiptTitle: 'ใบเสร็จรับเงิน',
+      date: 'วันที่',
+      customerName: 'ชื่อผู้เข้าพัก',
+      taxId: 'เลขประจำตัวผู้เสียภาษี',
+      tel: 'โทรศัพท์',
+      address: 'ที่อยู่',
+      roomNumber: 'หมายเลขห้อง',
+      roomType: 'ประเภทห้อง',
+      checkIn: 'เช็คอิน',
+      checkOut: 'เช็คเอาท์',
+      pricePerNight: 'ราคาต่อคืน',
+      nights: 'จำนวนคืน',
+      total: 'รวม',
+      paymentStatus: 'สถานะการชำระเงิน',
+      paid: 'ชำระแล้ว',
+      unpaid: 'ยังไม่ชำระ',
+      hotelInfo: {
+        name: 'โรงแรมริเวอร์ ซันไรส์',
+        address: '123 ถนนริมน้ำ ตำบลในเมือง อำเภอเมือง จังหวัดมหาสารคาม',
+        tel: 'โทร. 043-123456',
+      },
+    },
+    en: {
+      receiptTitle: 'Receipt',
+      date: 'Date',
+      customerName: 'Guest Name',
+      taxId: 'Tax ID',
+      tel: 'Tel',
+      address: 'Address',
+      roomNumber: 'Room No.',
+      roomType: 'Room Type',
+      checkIn: 'Check-in',
+      checkOut: 'Check-out',
+      pricePerNight: 'Price/Night',
+      nights: 'Nights',
+      total: 'Total',
+      paymentStatus: 'Payment Status',
+      paid: 'Paid',
+      unpaid: 'Unpaid',
+      hotelInfo: {
+        name: 'River Sunrise Hotel',
+        address: '123 Riverside Rd., Mueang, Maha Sarakham, Thailand',
+        tel: 'Tel. 043-123456',
+      },
+    },
+  };
+
+  const t = translations[language as 'th' | 'en'];
+
+  const formattedPaymentDate = paymentDate
+    ? new Date(paymentDate + 'T00:00:00Z').toLocaleDateString(
+        language === 'th' ? 'th-TH' : 'en-US',
+        { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }
+      )
+    : '-';
+
+  const customer: Customer = bookings[0]?.customer || ({} as Customer);
+
+  const totalAmount = useMemo(() => {
+    return bookings.reduce((sum, booking) => {
+      const room = booking.room;
+      if (!room || !booking.check_in_date || !booking.check_out_date) return sum;
+      const checkIn = new Date(booking.check_in_date);
+      const checkOut = new Date(booking.check_out_date);
+      const nights = Math.max(
+        0,
+        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return sum + nights * (booking.price_per_night || 0);
+    }, 0);
+  }, [bookings]);
+
+  return (
+    <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-8 font-sans">
+      {/* หัวกระดาษ */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold">{t.receiptTitle}</h1>
+        <p className="text-sm text-gray-600">{t.date}: {formattedPaymentDate}</p>
+      </div>
+
+      {/* ข้อมูลโรงแรม */}
+      <div className="mb-6 text-center">
+        <p className="font-semibold">{t.hotelInfo?.name || '-'}</p>
+        <p className="text-xs">{t.hotelInfo?.address || '-'}</p>
+        <p className="text-xs">{t.hotelInfo?.tel || '-'}</p>
+      </div>
+
+      {/* ข้อมูลลูกค้า */}
+      <div className="mb-6">
+        <h2 className="font-semibold mb-2">{t.customerName}: {customer.customer_name || '-'}</h2>
+        <p className="text-sm">{t.taxId}: {customer.customer_tax_id || '-'}</p>
+        <p className="text-sm">{t.tel}: {customer.customer_tel || '-'}</p>
+        <p className="text-sm">{t.address}: {customer.customer_tax_address || '-'}</p>
+      </div>
+
+      {/* ตารางจอง */}
+      <table className="w-full text-sm border-collapse border border-gray-300 mb-6">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border border-gray-300 p-2">{t.roomNumber}</th>
+            <th className="border border-gray-300 p-2">{t.roomType}</th>
+            <th className="border border-gray-300 p-2">{t.checkIn}</th>
+            <th className="border border-gray-300 p-2">{t.checkOut}</th>
+            <th className="border border-gray-300 p-2">{t.pricePerNight}</th>
+            <th className="border border-gray-300 p-2">{t.nights}</th>
+            <th className="border border-gray-300 p-2">{t.total}</th>
+            <th className="border border-gray-300 p-2">{t.paymentStatus}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bookings.map((booking, index) => {
+            const room = booking.room;
+            if (!room || !booking.check_in_date || !booking.check_out_date) return null;
+
+            const checkIn = new Date(booking.check_in_date);
+            const checkOut = new Date(booking.check_out_date);
+            const nights = Math.max(
+              0,
+              (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            const total = nights * (booking.price_per_night || 0);
+
+            return (
+              <tr key={index} className="text-center">
+                <td className="border border-gray-300 p-2">{room.room_number}</td>
+                <td className="border border-gray-300 p-2">{room.room_type}</td>
+                <td className="border border-gray-300 p-2">{booking.check_in_date}</td>
+                <td className="border border-gray-300 p-2">{booking.check_out_date}</td>
+                <td className="border border-gray-300 p-2">{booking.price_per_night}</td>
+                <td className="border border-gray-300 p-2">{nights}</td>
+                <td className="border border-gray-300 p-2">{total.toFixed(2)}</td>
+                <td className="border border-gray-300 p-2">
+                  {booking.payment_status === 'paid' ? t.paid : t.unpaid}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* รวมยอด */}
+      <div className="text-right font-semibold text-lg">
+        {t.total}: {totalAmount.toFixed(2)}
+      </div>
+    </div>
+  );
 };
 
-const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({
-    isOpen,
-    onClose,
-    bookings,
-    logoSrc,
-    language,
-    paymentMethod,
-    paymentDate,
-}) => {
-    const t = translations[language];
-    if (!isOpen || bookings.length === 0) return null;
-
-    const customer = bookings[0]?.customer || {};
-    const printDate = new Date().toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-
-    const groupedItems = useMemo(() => {
-        const itemsMap = new Map<string, GroupedItem>();
-
-        bookings.forEach((booking) => {
-            const room = booking.room;
-            if (!room || !booking.check_in_date || !booking.check_out_date) return;
-
-            const roomType = room.room_type || 'N/A';
-            const bedType = room.bed_type || 'N/A';
-            const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            const price = booking.price_per_night || 0;
-            const key = `${roomType}-${bedType}-${price}-${booking.check_in_date}-${booking.check_out_date}`;
-
-            if (itemsMap.has(key)) {
-                const existingItem = itemsMap.get(key)!;
-                existingItem.roomCount += 1;
-                existingItem.total += nights * price;
-            } else {
-                let description = `${roomType}`;
-                if (language === 'th') {
-                    if (roomType === 'River view') description = 'ห้องพัก ริเวอร์ ซันไรส์';
-                    else if (roomType === 'Standard view' && bedType === 'Twin bed')
-                        description = 'ห้องพัก สแตนดาร์ด ทวิน';
-                    else if (roomType === 'Standard view' && bedType === 'Double bed')
-                        description = 'ห้องพัก สแตนดาร์ด ดับเบิล';
-                    else if (roomType === 'Cottage') description = 'ห้องพัก บ้านไม้';
-                    else description = `ห้องพัก (${roomType})`;
-                } else {
-                    if (roomType === 'River view') description = 'River Sunrise Room';
-                    else if (roomType === 'Standard view' && bedType === 'Twin bed')
-                        description = 'Standard Twin Room';
-                    else if (roomType === 'Standard view' && bedType === 'Double bed')
-                        description = 'Standard Double Room';
-                    else if (roomType === 'Cottage') description = 'Cottage Room';
-                    else description = `Room (${roomType})`;
-                }
-
-                itemsMap.set(key, {
-                    description,
-                    checkIn: booking.check_in_date,
-                    checkOut: booking.check_out_date,
-                    unitPrice: price,
-                    roomCount: 1,
-                    nights,
-                    total: nights * price,
-                });
-            }
-        });
-
-        return Array.from(itemsMap.values());
-    }, [bookings, language]);
-
-    const totalAmount = groupedItems.reduce((sum, item) => sum + item.total, 0);
-    const formattedPaymentDate = paymentDate
-        ? new Date(paymentDate + 'T00:00:00Z').toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              timeZone: 'UTC',
-          })
-        : '-';
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 font-['Sarabun',_sans-serif]">
-            <style>
-                {`
-                @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
-                body {
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                }
-                @media print {
-                    body * { visibility: hidden; }
-                    .no-print { display: none; }
-                    #receipt-printable, #receipt-printable * { visibility: visible; }
-                    #receipt-printable {
-                        position: absolute; left: 0; top: 0; width: 100%; height: auto;
-                        font-size: 10pt;
-                    }
-                    @page { size: A4; margin: 2cm; }
-                }
-                `}
-            </style>
-
-            <div className="bg-gray-100 rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
-                {/* Header buttons */}
-                <div className="p-4 bg-white rounded-t-lg flex justify-between items-center no-print">
-                    <h2 className="text-xl font-bold text-text-dark">{t.receipt}</h2>
-                    <div>
-                        <button
-                            onClick={() => window.print()}
-                            className="px-4 py-2 bg-primary-yellow text-white rounded-md mr-2"
-                        >
-                            {t.print}
-                        </button>
-                        <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-dark rounded-md">
-                            {t.cancel}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-grow overflow-y-auto p-2 sm:p-4">
-                    <div
-                       
+export default ReceiptPage;
