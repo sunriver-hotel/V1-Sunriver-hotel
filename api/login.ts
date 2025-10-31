@@ -27,6 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ success: false, message: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน' });
   }
 
+  // --- ทางด่วนสำหรับผู้ใช้ Preview ---
+  // เพิ่มส่วนนี้กลับเข้ามาเพื่อให้สามารถทดสอบระบบในหน้า Preview ได้สะดวก
+  if (username === 'preview' && password === 'preview123') {
+    return res.status(200).json({ success: true });
+  }
+
   try {
     // ดึงรหัสผ่านจากตาราง 'public.users' อย่างปลอดภัย
     const query = 'SELECT password_hash FROM public.users WHERE username = $1';

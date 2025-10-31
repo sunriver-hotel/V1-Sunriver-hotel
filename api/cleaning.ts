@@ -12,9 +12,19 @@ const pool = new Pool({
 const getStatuses = async (req: VercelRequest, res: VercelResponse) => {
     const client = await pool.connect();
     try {
-        // --- AUTO-UPDATE LOGIC ---
-        // This logic runs every time statuses are fetched, effectively simulating a daily job.
-        // It finds all rooms that are currently occupied (staying overnight) and marks them as needing cleaning.
+        // --- STEP 1: ทำให้ระบบเสถียร (ROBUSTNESS) ---
+        // ตรวจสอบและสร้างข้อมูลสถานะเริ่มต้นสำหรับห้องที่ยังไม่มีข้อมูล
+        // ทำให้ระบบทำงานได้ถูกต้องเสมอ แม้ข้อมูลเริ่มต้นใน DB จะไม่ครบ
+        const ensureStatusesQuery = `
+            INSERT INTO public.cleaning_statuses (room_id, status)
+            SELECT room_id, 'Clean' FROM public.rooms
+            ON CONFLICT (room_id) DO NOTHING;
+        `;
+        await client.query(ensureStatusesQuery);
+
+
+        // --- STEP 2: AUTO-UPDATE LOGIC ---
+        // ค้นหาห้องทั้งหมดที่มีผู้เข้าพักอยู่ (พักค้างคืน) และเปลี่ยนสถานะเป็น "Needs Cleaning"
         const today = new Date().toISOString().split('T')[0];
         
         const occupiedRoomsQuery = `
@@ -36,7 +46,7 @@ const getStatuses = async (req: VercelRequest, res: VercelResponse) => {
             await client.query(updateQuery, [roomIdsToUpdate]);
         }
         
-        // --- FETCH AND RETURN ---
+        // --- STEP 3: ดึงข้อมูลและส่งกลับ ---
         const fetchQuery = `
             SELECT cleaning_status_id, room_id, status, last_updated 
             FROM public.cleaning_statuses 
