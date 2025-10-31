@@ -22,8 +22,8 @@ interface GroupedItem {
     total: number;
 }
 
-// FIX: Correctly handle dates as UTC to prevent timezone-related calculation errors.
-const calculateNights = (checkIn: string, checkOut: string): number => {
+const calculateNights = (checkIn: string | null | undefined, checkOut: string | null | undefined): number => {
+    if (!checkIn || !checkOut) return 1; // Default to 1 night if dates are missing
     const start = new Date(checkIn + 'T00:00:00Z').getTime();
     const end = new Date(checkOut + 'T00:00:00Z').getTime();
     if (isNaN(start) || isNaN(end) || end <= start) return 1;
@@ -46,28 +46,35 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
 
         bookings.forEach(booking => {
             const room = booking.room;
-            if (!room) return;
+            // Skip if essential data for grouping is missing
+            if (!room || !booking.check_in_date || !booking.check_out_date) {
+                return;
+            }
 
+            const roomType = room.room_type || 'N/A';
+            const bedType = room.bed_type || 'N/A';
             const nights = calculateNights(booking.check_in_date, booking.check_out_date);
-            const price = booking.price_per_night || 0; // FIX: Default null price to 0
-            const key = `${room.room_type}-${room.bed_type}-${price}-${booking.check_in_date}-${booking.check_out_date}`;
+            const price = booking.price_per_night || 0;
+            const key = `${roomType}-${bedType}-${price}-${booking.check_in_date}-${booking.check_out_date}`;
 
             if (itemsMap.has(key)) {
                 const existingItem = itemsMap.get(key)!;
                 existingItem.roomCount += 1;
                 existingItem.total += nights * price;
             } else {
-                 let description = `${room.room_type}`;
+                 let description = `${roomType}`;
                  if(language === 'th') {
-                   if(room.room_type === 'River view') description = 'ห้องพัก ริเวอร์ ซันไรส์';
-                   else if(room.room_type === 'Standard view' && room.bed_type === 'Twin bed') description = 'ห้องพัก สแตนดาร์ด ทวิน';
-                   else if(room.room_type === 'Standard view' && room.bed_type === 'Double bed') description = 'ห้องพัก สแตนดาร์ด ดับเบิล';
-                   else if(room.room_type === 'Cottage') description = 'ห้องพัก บ้านไม้';
+                   if(roomType === 'River view') description = 'ห้องพัก ริเวอร์ ซันไรส์';
+                   else if(roomType === 'Standard view' && bedType === 'Twin bed') description = 'ห้องพัก สแตนดาร์ด ทวิน';
+                   else if(roomType === 'Standard view' && bedType === 'Double bed') description = 'ห้องพัก สแตนดาร์ด ดับเบิล';
+                   else if(roomType === 'Cottage') description = 'ห้องพัก บ้านไม้';
+                   else description = `ห้องพัก (${roomType})`
                 } else {
-                   if(room.room_type === 'River view') description = 'River Sunrise Room';
-                   else if(room.room_type === 'Standard view' && room.bed_type === 'Twin bed') description = 'Standard Twin Room';
-                   else if(room.room_type === 'Standard view' && room.bed_type === 'Double bed') description = 'Standard Double Room';
-                   else if(room.room_type === 'Cottage') description = 'Cottage Room';
+                   if(roomType === 'River view') description = 'River Sunrise Room';
+                   else if(roomType === 'Standard view' && bedType === 'Twin bed') description = 'Standard Twin Room';
+                   else if(roomType === 'Standard view' && bedType === 'Double bed') description = 'Standard Double Room';
+                   else if(roomType === 'Cottage') description = 'Cottage Room';
+                   else description = `Room (${roomType})`
                 }
                 
                 itemsMap.set(key, {
@@ -157,7 +164,7 @@ const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ isOpen, onClose, book
                             <div className="text-xs text-left w-1/3 pl-4">
                                 <div className="flex">
                                     <span className="font-bold w-24 inline-block">{language === 'th' ? 'เลขที่ใบเสร็จ' : 'Receipt No.'}:</span>
-                                    <div>{bookings.map(b => <p key={b.booking_id}>{b.booking_id}</p>)}</div>
+                                    <div>{bookings.map((b, i) => <p key={b.booking_id || i}>{b.booking_id || '-'}</p>)}</div>
                                 </div>
                                 <div className="flex mt-1">
                                     <span className="font-bold w-24 inline-block">{language === 'th' ? 'วันที่' : 'Date'}:</span> 

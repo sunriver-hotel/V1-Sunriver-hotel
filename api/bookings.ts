@@ -34,8 +34,8 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
             'floor', r.floor
         ) as room
       FROM public.bookings b
-      JOIN public.customers c ON b.customer_id = c.customer_id
-      JOIN public.rooms r ON b.room_id = r.room_id
+      LEFT JOIN public.customers c ON b.customer_id = c.customer_id
+      LEFT JOIN public.rooms r ON b.room_id = r.room_id
   `;
 
   try {
