@@ -230,11 +230,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, on
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
             {/* Customer Info */}
             <div>
-              <label className="block text-sm font-medium text-text-dark">{t.customerName}</label>
+              <label className="block text-sm font-medium text-text-dark">{t.customerName}<span className="text-red-500 ml-1">*</span></label>
               <input type="text" name="customer_name" value={formData.customer_name} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-dark">{t.phone}</label>
+              <label className="block text-sm font-medium text-text-dark">{t.phone}<span className="text-red-500 ml-1">*</span></label>
               <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow" />
             </div>
             <div>
