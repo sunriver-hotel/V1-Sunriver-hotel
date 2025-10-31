@@ -262,6 +262,7 @@ function App() {
                 bookings={allBookings}
                 isLoading={isLoading}
                 error={error}
+                logoSrc={logoSrc}
             />
         )}
       </div>
