@@ -30,6 +30,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [defaultCheckInDate, setDefaultCheckInDate] = useState<string | null>(null);
 
   // Data Fetching
   const fetchDashboardData = useCallback(async () => {
@@ -111,6 +112,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
   
   // Modal Handling
   const handleAddBooking = () => {
+    setDefaultCheckInDate(null); // Use today's date in modal
     setEditingBooking(null);
     setIsModalOpen(true);
   };
@@ -119,10 +121,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
     setEditingBooking(booking);
     setIsModalOpen(true);
   };
+  
+  const handleCalendarDateClick = (date: Date) => {
+    setSelectedDate(date);
+    setDefaultCheckInDate(date.toISOString().split('T')[0]);
+    setEditingBooking(null);
+    setIsModalOpen(true);
+  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingBooking(null);
+    setDefaultCheckInDate(null);
   };
 
   const handleSaveBooking = async (bookingData: Partial<Booking>) => {
@@ -185,7 +195,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
             <Calendar 
               currentDate={currentMonthDate} 
               selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
+              onDateSelect={handleCalendarDateClick}
               language={language}
               occupancyMap={occupancyMap}
               totalRooms={rooms.length}
@@ -211,6 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, language }) => {
             rooms={rooms}
             existingBooking={editingBooking}
             bookings={bookings}
+            defaultCheckInDate={defaultCheckInDate}
         />
       )}
     </div>

@@ -10,42 +10,59 @@ interface BookingModalProps {
   rooms: Room[];
   existingBooking: Booking | null;
   bookings: Booking[];
+  defaultCheckInDate: string | null;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, language, rooms, existingBooking, bookings }) => {
+const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, language, rooms, existingBooking, bookings, defaultCheckInDate }) => {
   const t = translations[language];
 
-  const [formData, setFormData] = useState({
-    customer_name: '',
-    phone: '',
-    email: '',
-    address: '',
-    tax_id: '',
-    check_in_date: new Date().toISOString().split('T')[0],
-    check_out_date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0],
-    room_id: '',
-    price_per_night: 800,
-    status: 'Unpaid' as BookingStatus,
-    deposit: 0,
-  });
+  const getInitialState = () => {
+    const checkIn = defaultCheckInDate || new Date().toISOString().split('T')[0];
+    
+    // Use UTC to prevent timezone issues when adding one day
+    const checkInUtc = new Date(checkIn + 'T00:00:00Z');
+    const checkOutUtc = new Date(checkInUtc.getTime());
+    checkOutUtc.setUTCDate(checkOutUtc.getUTCDate() + 1);
+    const checkOut = checkOutUtc.toISOString().split('T')[0];
+
+    return {
+      customer_name: '',
+      phone: '',
+      email: '',
+      address: '',
+      tax_id: '',
+      check_in_date: checkIn,
+      check_out_date: checkOut,
+      room_id: '',
+      price_per_night: 800,
+      status: 'Unpaid' as BookingStatus,
+      deposit: 0,
+    };
+  };
+
+  const [formData, setFormData] = useState(getInitialState());
 
   useEffect(() => {
-    if (existingBooking) {
-      setFormData({
-        customer_name: existingBooking.customer?.customer_name || '',
-        phone: existingBooking.customer?.phone || '',
-        email: existingBooking.customer?.email || '',
-        address: existingBooking.customer?.address || '',
-        tax_id: existingBooking.customer?.tax_id || '',
-        check_in_date: existingBooking.check_in_date,
-        check_out_date: existingBooking.check_out_date,
-        room_id: String(existingBooking.room_id),
-        price_per_night: existingBooking.price_per_night,
-        status: existingBooking.status,
-        deposit: existingBooking.deposit || 0,
-      });
+    if (isOpen) {
+        if (existingBooking) {
+          setFormData({
+            customer_name: existingBooking.customer?.customer_name || '',
+            phone: existingBooking.customer?.phone || '',
+            email: existingBooking.customer?.email || '',
+            address: existingBooking.customer?.address || '',
+            tax_id: existingBooking.customer?.tax_id || '',
+            check_in_date: existingBooking.check_in_date,
+            check_out_date: existingBooking.check_out_date,
+            room_id: String(existingBooking.room_id),
+            price_per_night: existingBooking.price_per_night,
+            status: existingBooking.status,
+            deposit: existingBooking.deposit || 0,
+          });
+        } else {
+            setFormData(getInitialState());
+        }
     }
-  }, [existingBooking]);
+  }, [isOpen, existingBooking, defaultCheckInDate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -79,24 +96,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
   };
   
   const availableRooms = useMemo(() => {
-    const checkInTime = new Date(formData.check_in_date).getTime();
-    const checkOutTime = new Date(formData.check_out_date).getTime();
+    // Use UTC for date comparisons to ensure consistency
+    const checkInTime = new Date(formData.check_in_date + 'T00:00:00Z').getTime();
+    const checkOutTime = new Date(formData.check_out_date + 'T00:00:00Z').getTime();
 
     if (isNaN(checkInTime) || isNaN(checkOutTime) || checkInTime >= checkOutTime) {
+      // Return all rooms if dates are invalid, allowing the user to correct them
       return rooms;
     }
 
     const bookedRoomIds = new Set<number>();
     bookings.forEach(booking => {
-        // Skip the current booking if we are editing it
         if (existingBooking && booking.booking_id === existingBooking.booking_id) {
             return;
         }
 
-        const bookingCheckInTime = new Date(booking.check_in_date).getTime();
-        const bookingCheckOutTime = new Date(booking.check_out_date).getTime();
+        const bookingCheckInTime = new Date(booking.check_in_date + 'T00:00:00Z').getTime();
+        const bookingCheckOutTime = new Date(booking.check_out_date + 'T00:00:00Z').getTime();
 
-        // Check for overlap
         if (checkInTime < bookingCheckOutTime && checkOutTime > bookingCheckInTime) {
             bookedRoomIds.add(booking.room_id);
         }
@@ -104,6 +121,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, la
 
     return rooms.filter(room => !bookedRoomIds.has(room.room_id));
   }, [formData.check_in_date, formData.check_out_date, bookings, rooms, existingBooking]);
+
 
   if (!isOpen) return null;
 

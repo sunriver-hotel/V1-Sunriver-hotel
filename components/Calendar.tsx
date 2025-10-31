@@ -46,7 +46,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
       const isSelected = date.getTime() === selectedDateUTC.getTime();
       
       const dayCellClasses = [
-        "relative p-2 border-r border-b border-gray-200 flex flex-col justify-start items-start cursor-pointer transition-colors duration-200",
+        "relative p-1 sm:p-2 border-r border-b border-gray-200 flex flex-col justify-start items-center cursor-pointer transition-colors duration-200",
         isSelected ? "bg-primary-yellow bg-opacity-20" : "hover:bg-yellow-50",
       ].join(' ');
       
@@ -66,15 +66,15 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
         <div key={day} className={dayCellClasses} onClick={handleDateSelect}>
           <span className={dayNumberClasses}>{day}</span>
           <div className="w-full text-center mt-auto space-y-1">
-             <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-xs font-bold text-green-600">
+             <div className="flex items-center justify-center gap-1 sm:gap-2">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                <span className="text-[10px] sm:text-xs font-bold text-green-600">
                     {availableRooms} <span className="font-normal text-text-light hidden md:inline">{t.vacant}</span>
                 </span>
              </div>
-             <div className="flex items-center justify-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span className="text-xs font-bold text-red-600">
+             <div className="flex items-center justify-center gap-1 sm:gap-2">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
+                <span className="text-[10px] sm:text-xs font-bold text-red-600">
                     {occupiedRooms} <span className="font-normal text-text-light hidden md:inline">{t.booked}</span>
                 </span>
              </div>
@@ -89,7 +89,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentDate, selectedDate, onDateSe
     <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
       <div className="grid grid-cols-7 text-center font-medium text-text-light border-b border-gray-200">
         {t.daysShort.map(day => (
-          <div key={day} className="py-2 border-r border-gray-200 last:border-r-0">{day}</div>
+          <div key={day} className="py-1 md:py-2 border-r border-gray-200 last:border-r-0 text-xs sm:text-base">{day}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 grid-rows-6 flex-grow">
