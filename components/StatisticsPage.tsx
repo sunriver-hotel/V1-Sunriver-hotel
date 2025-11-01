@@ -289,11 +289,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
                     </div>
                 </div>
             </div>
-            <div className="overflow-x-auto">
-                <div className="min-w-[600px]">
-                    <LineChart data={occupancyData} title={t.occupancyStatistics} />
-                </div>
-            </div>
+            <LineChart data={occupancyData} title={t.occupancyStatistics} />
         </div>
 
         {/* Room Popularity Card */}
@@ -309,9 +305,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
                     </div>
                  </div>
             </div>
-             <div className="overflow-x-auto">
-                <PieChart data={popularityData} title={t.roomPopularity} />
-            </div>
+            <PieChart data={popularityData} title={t.roomPopularity} />
         </div>
       </div>
     )
