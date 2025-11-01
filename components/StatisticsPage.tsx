@@ -342,8 +342,8 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
                 </div>
             </div>
             <div className="overflow-x-auto">
-                 {/* **FIX**: Removed min-width to make chart fully responsive on mobile */}
-                <div>
+                 {/* **FIX**: Added min-width to prevent the chart from collapsing and hiding days on mobile. */}
+                <div className="min-w-[600px]">
                     <VerticalBarChart data={occupancyData} title={t.occupancyStatistics} />
                 </div>
             </div>
