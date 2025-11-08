@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { translations } from '../constants';
 import type { Language, Page, UserRole } from '../types';
@@ -55,6 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
     const t = translations[language];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const isLogoActionable = userRole === 'admin';
+
     const navItems = [
         { id: 'dashboard', text: t.navDashboard, icon: DashboardIcon },
         { id: 'room-status', text: t.navRoomStatus, icon: RoomStatusIcon },
@@ -72,7 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
 
 
     const handleLogoClick = () => {
-        if (isLogoLoading) return;
+        if (isLogoLoading || !isLogoActionable) return;
         fileInputRef.current?.click();
     };
 
@@ -101,18 +104,19 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                             accept="image/*"
                             className="hidden"
                             aria-hidden="true"
+                            disabled={!isLogoActionable}
                         />
                         <div
                             onClick={handleLogoClick}
-                            className={`group relative ${isLogoLoading ? 'cursor-wait' : 'cursor-pointer'}`}
-                            title={!isLogoLoading ? t.logoUploadTooltip : undefined}
+                            className={`group relative ${isLogoLoading ? 'cursor-wait' : isLogoActionable ? 'cursor-pointer' : 'cursor-default'}`}
+                            title={!isLogoLoading && isLogoActionable ? t.logoUploadTooltip : undefined}
                         >
                             {logoSrc ? (
                                 <img src={logoSrc} alt="Logo" className={`h-10 w-10 rounded-full object-cover transition-opacity ${isLogoLoading ? 'opacity-50' : 'opacity-100'}`} />
                             ) : (
                                 <div className={`h-10 w-10 rounded-full bg-primary-yellow ${isLogoLoading ? 'animate-pulse' : ''}`}></div>
                             )}
-                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
+                             {isLogoActionable && <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>}
                         </div>
                         
                         {visibleNavItems.map(item => {

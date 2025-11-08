@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import type { Language, UserRole } from '../types';
 import { translations } from '../constants';
 import { login, register } from '../services/authService';
@@ -9,7 +9,6 @@ interface LoginPageProps {
   language: Language;
   setLanguage: (lang: Language) => void;
   logoSrc: string | null;
-  onLogoUpload: (logoDataUrl: string) => void;
   isLogoLoading: boolean;
 }
 
@@ -36,7 +35,7 @@ const LanguageSelector: React.FC<{ language: Language, setLanguage: (lang: Langu
   );
 };
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc, onLogoUpload, isLogoLoading }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLanguage, logoSrc, isLogoLoading }) => {
   const [isRegisterView, setIsRegisterView] = useState(false);
   
   // States for Login form
@@ -52,7 +51,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const t = translations[language];
 
@@ -100,24 +98,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
       setError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  const handleLogoClick = () => {
-    if (isLogoLoading) return;
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result) {
-          onLogoUpload(reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
     }
   };
   
@@ -228,18 +208,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg m-4">
       <div className="text-center">
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
         <div
-            onClick={handleLogoClick}
-            className={`group relative inline-block mb-4 ${isLogoLoading ? 'cursor-wait' : 'cursor-pointer'}`}
-            title={!isLogoLoading ? t.logoUploadTooltip : undefined}
+            className={`relative inline-block mb-4`}
         >
             {logoSrc ? (
                 <img src={logoSrc} alt="Hotel Logo" className={`mx-auto h-20 w-20 rounded-full object-cover ${isLogoLoading ? 'opacity-50' : ''}`} />
             ) : (
                 <div className={`mx-auto h-20 w-20 rounded-full bg-primary-yellow ${isLogoLoading ? 'animate-pulse' : ''}`}></div>
             )}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full"></div>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{isRegisterView ? t.registerTitle : t.loginTitle}</h1>
       </div>

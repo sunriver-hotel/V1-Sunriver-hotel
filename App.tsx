@@ -318,7 +318,6 @@ function App() {
               language={language}
               setLanguage={setLanguage}
               logoSrc={logoSrc}
-              onLogoUpload={handleLogoUpload}
               isLogoLoading={isLogoLoading}
             />
         </div>
