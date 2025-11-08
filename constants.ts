@@ -12,6 +12,17 @@ export const translations = {
     thai: "ไทย",
     english: "English",
     
+    // Registration
+    registerTitle: "Register",
+    nicknameLabel: "Nickname",
+    registerButton: "Register",
+    registering: "Registering...",
+    registerSuccess: "Registration successful! Please wait for admin approval.",
+    switchToLoginPrompt: "Already have an account?",
+    switchToRegisterPrompt: "Don't have an account?",
+    usernameExistsError: "This username already exists.",
+    accountNotApprovedError: "Your account has not been approved yet.",
+
     // Navbar
     navDashboard: "Booking Overview",
     navRoomStatus: "Room Status",
@@ -154,6 +165,17 @@ export const translations = {
     welcomeMessage: "ยินดีต้อนรับ!",
     thai: "ไทย",
     english: "English",
+
+    // Registration
+    registerTitle: "ลงทะเบียน",
+    nicknameLabel: "ชื่อเล่น",
+    registerButton: "ลงทะเบียน",
+    registering: "กำลังลงทะเบียน...",
+    registerSuccess: "ลงทะเบียนสำเร็จ! กรุณารอการอนุมัติจากผู้ดูแลระบบ",
+    switchToLoginPrompt: "มีบัญชีอยู่แล้ว?",
+    switchToRegisterPrompt: "ยังไม่มีบัญชี?",
+    usernameExistsError: "ชื่อผู้ใช้นี้มีอยู่แล้วในระบบ",
+    accountNotApprovedError: "บัญชีของคุณยังไม่ได้รับการอนุมัติ",
 
     // Navbar
     navDashboard: "ภาพรวมการจอง",

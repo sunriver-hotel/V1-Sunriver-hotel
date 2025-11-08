@@ -34,14 +34,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // ดึงรหัสผ่านและ role จากตาราง 'public.users' อย่างปลอดภัย
-    const query = 'SELECT password_hash, user_role FROM public.users WHERE username = $1';
+    // ดึงรหัสผ่าน, role, และสถานะการอนุมัติจากตาราง 'public.users' อย่างปลอดภัย
+    const query = 'SELECT password_hash, user_role, approved_status FROM public.users WHERE username = $1';
     const { rows } = await pool.query(query, [username]);
 
     // กรณีที่ 1: ไม่พบชื่อผู้ใช้นี้ในระบบ
     if (rows.length === 0) {
       // ใช้ข้อความกลางๆ เพื่อป้องกันการเดาชื่อผู้ใช้จากผู้ไม่หวังดี
       return res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+    }
+    
+    // NEW: ตรวจสอบสถานะการอนุมัติก่อนเช็ครหัสผ่าน
+    if (rows[0].approved_status !== 'approved') {
+        return res.status(401).json({ success: false, message: 'บัญชีของคุณยังไม่ได้รับการอนุมัติ' });
     }
 
     const passwordInDb = rows[0].password_hash;

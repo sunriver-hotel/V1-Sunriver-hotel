@@ -21,9 +21,9 @@ const getSetting = async (req: VercelRequest, res: VercelResponse) => {
         }
     } catch (error) {
         console.error('Get Setting Error:', error);
-        // Check if the error is because the table doesn't exist
+        // If the table doesn't exist, gracefully return null. This is not a critical error.
         if (error instanceof Error && (error as any).code === '42P01') { // 42P01 is undefined_table
-             return res.status(500).json({ message: 'The `app_settings` table does not exist. Please run the required SQL command.' });
+             return res.status(200).json({ logo: null });
         }
         return res.status(500).json({ message: 'Internal Server Error' });
     }
