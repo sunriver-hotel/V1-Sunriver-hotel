@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { Language, Booking, Room } from '../types';
+import type { Language, Booking, Room, UserRole } from '../types';
 import { translations } from '../constants';
 import Calendar from './Calendar';
 import DailySummary from './DailySummary';
@@ -14,6 +14,7 @@ interface DashboardProps {
   setCurrentMonthDate: React.Dispatch<React.SetStateAction<Date>>;
   onAddBooking: (checkInDate?: string) => void;
   onEditBooking: (booking: Booking) => void;
+  userRole: UserRole | null;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -26,6 +27,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   setCurrentMonthDate,
   onAddBooking,
   onEditBooking,
+  userRole,
 }) => {
   const t = translations[language];
   
@@ -91,8 +93,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   const handleCalendarDateClick = (date: Date) => { // date is UTC
     setSelectedDate(date); // Update the summary view
-    const dateString = date.toISOString().split('T')[0]; // Format for modal
-    onAddBooking(dateString); // Trigger modal with selected date
+    
+    // Only admins can add bookings
+    if (userRole === 'admin') {
+      const dateString = date.toISOString().split('T')[0]; // Format for modal
+      onAddBooking(dateString); // Trigger modal with selected date
+    }
   };
 
 
@@ -144,6 +150,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             checkOuts={checkOuts}
             staying={staying}
             onEditBooking={onEditBooking}
+            userRole={userRole}
         />
       </main>
     </div>

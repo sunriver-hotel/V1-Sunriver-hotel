@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Language, Booking } from '../types';
+import type { Language, Booking, UserRole } from '../types';
 import { translations } from '../constants';
 
 interface DailySummaryProps {
@@ -10,9 +10,10 @@ interface DailySummaryProps {
   staying: Booking[];
   onEditBooking: (booking: Booking) => void;
   onDateChange: (date: string) => void;
+  userRole: UserRole | null;
 }
 
-const SummarySection: React.FC<{ title: string; count: number; bookings: Booking[]; onEditBooking: (booking: Booking) => void; language: Language; }> = ({ title, count, bookings, onEditBooking, language }) => {
+const SummarySection: React.FC<{ title: string; count: number; bookings: Booking[]; onEditBooking: (booking: Booking) => void; language: Language; userRole: UserRole | null; }> = ({ title, count, bookings, onEditBooking, language, userRole }) => {
   const [isOpen, setIsOpen] = useState(true);
   
   return (
@@ -27,7 +28,11 @@ const SummarySection: React.FC<{ title: string; count: number; bookings: Booking
             <p className="text-text-light italic">{translations[language].noActivity}</p>
           ) : (
             bookings.map(booking => (
-              <div key={booking.booking_id} onClick={() => onEditBooking(booking)} className="p-3 bg-gray-50 rounded-md cursor-pointer hover:bg-yellow-50 transition-colors">
+              <div 
+                key={booking.booking_id} 
+                onClick={() => userRole === 'admin' && onEditBooking(booking)} 
+                className={`p-3 bg-gray-50 rounded-md ${userRole === 'admin' ? 'cursor-pointer hover:bg-yellow-50 transition-colors' : 'cursor-default'}`}
+              >
                 <p className="font-semibold">{booking.customer?.customer_name}</p>
                 <p className="text-sm text-text-light">{booking.customer?.phone}</p>
                 <p className="text-sm text-text-light">Room: {booking.room?.room_number}</p>
@@ -41,7 +46,7 @@ const SummarySection: React.FC<{ title: string; count: number; bookings: Booking
   );
 };
 
-const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, checkIns, checkOuts, staying, onEditBooking, onDateChange }) => {
+const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, checkIns, checkOuts, staying, onEditBooking, onDateChange, userRole }) => {
   const t = translations[language];
   // Add timeZone: 'UTC' to ensure the displayed date matches the selected UTC date, regardless of user's local timezone.
   const formattedDate = selectedDate.toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
@@ -55,9 +60,9 @@ const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, che
   // Helper to format date for the input[type=date], using UTC methods.
   const formatDateForInput = (date: Date) => {
     const year = date.getUTCFullYear();
-    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const month = date.getUTCMonth() + 1;
+    const day = date.getUTCDate();
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -73,9 +78,9 @@ const DailySummary: React.FC<DailySummaryProps> = ({ selectedDate, language, che
             />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SummarySection title={t.checkIns} count={checkIns.length} bookings={checkIns} onEditBooking={onEditBooking} language={language} />
-            <SummarySection title={t.checkOuts} count={checkOuts.length} bookings={checkOuts} onEditBooking={onEditBooking} language={language}/>
-            <SummarySection title={t.staying} count={staying.length} bookings={staying} onEditBooking={onEditBooking} language={language}/>
+            <SummarySection title={t.checkIns} count={checkIns.length} bookings={checkIns} onEditBooking={onEditBooking} language={language} userRole={userRole}/>
+            <SummarySection title={t.checkOuts} count={checkOuts.length} bookings={checkOuts} onEditBooking={onEditBooking} language={language} userRole={userRole}/>
+            <SummarySection title={t.staying} count={staying.length} bookings={staying} onEditBooking={onEditBooking} language={language} userRole={userRole}/>
         </div>
     </div>
   );

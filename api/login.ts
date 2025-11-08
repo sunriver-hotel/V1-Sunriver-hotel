@@ -30,12 +30,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // --- ทางด่วนสำหรับผู้ใช้ Preview ---
   // เพิ่มส่วนนี้กลับเข้ามาเพื่อให้สามารถทดสอบระบบในหน้า Preview ได้สะดวก
   if (username === 'preview' && password === 'preview123') {
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, role: 'admin' });
   }
 
   try {
-    // ดึงรหัสผ่านจากตาราง 'public.users' อย่างปลอดภัย
-    const query = 'SELECT password_hash FROM public.users WHERE username = $1';
+    // ดึงรหัสผ่านและ role จากตาราง 'public.users' อย่างปลอดภัย
+    const query = 'SELECT password_hash, user_role FROM public.users WHERE username = $1';
     const { rows } = await pool.query(query, [username]);
 
     // กรณีที่ 1: ไม่พบชื่อผู้ใช้นี้ในระบบ
@@ -45,6 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const passwordInDb = rows[0].password_hash;
+    const userRole = rows[0].user_role;
 
     // กรณีที่ 2: เปรียบเทียบรหัสผ่านที่ผู้ใช้ส่งมากับรหัสผ่านในฐานข้อมูล (ซึ่งเป็น Plain text)
     // เพิ่ม .trim() เพื่อตัดช่องว่างที่อาจเกิดขึ้นโดยไม่ตั้งใจ
@@ -52,8 +53,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (isValid) {
       // รหัสผ่านถูกต้อง! ล็อกอินสำเร็จ
-      // ในแอปจริง อาจจะมีการสร้าง session หรือ JWT Token ต่อจากตรงนี้
-      return res.status(200).json({ success: true });
+      // ส่ง role กลับไปด้วย
+      return res.status(200).json({ success: true, role: userRole });
     } else {
       // รหัสผ่านไม่ถูกต้อง
       return res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });

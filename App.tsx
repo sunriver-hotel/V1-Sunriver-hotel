@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
@@ -7,12 +8,13 @@ import CleaningStatusPage from './components/CleaningStatusPage';
 import ReceiptPage from './components/ReceiptPage';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
-import type { Language, Page, Booking, Room, CleaningStatus } from './types';
+import type { Language, Page, Booking, Room, CleaningStatus, UserRole } from './types';
 import { getRooms, getBookingsForMonth, saveBooking, deleteBooking, getCleaningStatuses, updateCleaningStatus, getLogo, saveLogo, getAllBookings } from './services/bookingService';
 
 function App() {
   // Auth & Language State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [language, setLanguage] = useState<Language>('th');
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [isLogoLoading, setIsLogoLoading] = useState(true); // Start loading immediately
@@ -132,9 +134,14 @@ function App() {
   }, [isLoggedIn, currentPage, fetchDashboardData, fetchCleaningStatuses, fetchAllBookingsData, currentMonthDate]);
   
   // Event Handlers
-  const handleLoginSuccess = () => setIsLoggedIn(true);
+  const handleLoginSuccess = (role: UserRole) => {
+    setIsLoggedIn(true);
+    setUserRole(role);
+    setCurrentPage('dashboard'); // Always start at dashboard
+  };
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setUserRole(null);
     setCurrentPage('dashboard'); // Reset to default page on logout
   };
 
@@ -228,6 +235,7 @@ function App() {
         logoSrc={logoSrc}
         onLogoUpload={handleLogoUpload}
         isLogoLoading={isLogoLoading}
+        userRole={userRole}
       />
       <div className="p-4 md:p-6 lg:p-8">
         {currentPage === 'dashboard' && (
@@ -241,6 +249,7 @@ function App() {
             setCurrentMonthDate={setCurrentMonthDate}
             onAddBooking={handleOpenNewBookingModal}
             onEditBooking={handleOpenEditBookingModal}
+            userRole={userRole}
           />
         )}
         {currentPage === 'room-status' && (
@@ -250,9 +259,10 @@ function App() {
             bookings={bookings}
             onBookRoom={handleOpenNewBookingModal}
             onEditBooking={handleOpenEditBookingModal}
+            userRole={userRole}
            />
         )}
-        {currentPage === 'statistics' && (
+        {currentPage === 'statistics' && userRole === 'admin' && (
            <StatisticsPage
             language={language}
             rooms={rooms}
@@ -272,7 +282,7 @@ function App() {
                 error={error}
             />
         )}
-        {currentPage === 'receipt' && (
+        {currentPage === 'receipt' && userRole === 'admin' && (
            <ReceiptPage
             language={language}
             logoSrc={logoSrc}

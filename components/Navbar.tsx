@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { translations } from '../constants';
-import type { Language, Page } from '../types';
+import type { Language, Page, UserRole } from '../types';
 
 interface NavbarProps {
     currentPage: Page;
@@ -10,6 +10,7 @@ interface NavbarProps {
     logoSrc: string | null;
     onLogoUpload: (logoDataUrl: string) => void;
     isLogoLoading: boolean;
+    userRole: UserRole | null;
 }
 
 // SVG Icon Components
@@ -50,7 +51,7 @@ const LogoutIcon = () => (
 );
 
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, language, logoSrc, onLogoUpload, isLogoLoading }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, language, logoSrc, onLogoUpload, isLogoLoading, userRole }) => {
     const t = translations[language];
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +62,14 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
         { id: 'statistics', text: t.navStatistics, icon: StatisticsIcon },
         { id: 'receipt', text: t.navReceipt, icon: ReceiptIcon },
     ] as const;
+    
+    const visibleNavItems = navItems.filter(item => {
+        if (userRole === 'Housekeeper') {
+            return ['dashboard', 'room-status', 'cleaning'].includes(item.id);
+        }
+        return true; // Admin sees all
+    });
+
 
     const handleLogoClick = () => {
         if (isLogoLoading) return;
@@ -106,7 +115,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, lang
                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
                         </div>
                         
-                        {navItems.map(item => {
+                        {visibleNavItems.map(item => {
                             const isActive = currentPage === item.id;
                             const buttonClasses = `flex items-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-yellow ${
                                 isActive ? 'bg-primary-yellow text-white shadow-sm' : 'bg-white text-text-dark hover:bg-gray-100'

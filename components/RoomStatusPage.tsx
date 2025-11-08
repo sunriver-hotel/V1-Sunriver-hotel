@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Language, Room, Booking, RoomType, RoomStatusDetail, RoomStatusType } from '../types';
+import type { Language, Room, Booking, RoomType, RoomStatusDetail, RoomStatusType, UserRole } from '../types';
 import { translations } from '../constants';
 
 // Helper function to format date correctly
@@ -18,9 +18,10 @@ interface RoomStatusPageProps {
     bookings: Booking[];
     onBookRoom: (checkInDate: string, roomIds: number[]) => void;
     onEditBooking: (booking: Booking) => void;
+    userRole: UserRole | null;
 }
 
-const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookings, onBookRoom, onEditBooking }) => {
+const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookings, onBookRoom, onEditBooking, userRole }) => {
     const t = translations[language];
     const [viewDate, setViewDate] = useState<string>(formatDateForInput(new Date()));
     const [sortBy, setSortBy] = useState<SortByType>('room_number');
@@ -90,6 +91,9 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
     }, [viewDate, rooms, bookings, sortBy]);
 
     const handleRoomClick = (status: RoomStatusDetail) => {
+        // Housekeepers cannot book or edit
+        if (userRole === 'Housekeeper') return;
+        
         // A room with a check-out is available for a new booking on the same day.
         if (status.status === 'Vacant' || status.status === 'Check-out') {
             onBookRoom(viewDate, [status.room.room_id]);
@@ -162,12 +166,15 @@ const RoomStatusPage: React.FC<RoomStatusPageProps> = ({ language, rooms, bookin
                 {roomStatuses.map(status => {
                     const colors = getStatusColors(status.status);
                     const statusText = t[statusKeyMap[status.status]];
+                    const isActionable = userRole === 'admin';
 
                     return (
                         <div 
                             key={status.room.room_id} 
                             onClick={() => handleRoomClick(status)}
-                            className={`p-4 rounded-lg shadow-sm cursor-pointer transition-transform transform hover:scale-105 border-l-4 ${colors.border} ${colors.cardBg}`}
+                            className={`p-4 rounded-lg shadow-sm border-l-4 ${colors.border} ${colors.cardBg}
+                                ${isActionable ? 'cursor-pointer transition-transform transform hover:scale-105' : 'cursor-default'}
+                            `}
                         >
                             <div className="flex justify-between items-start">
                                  <h3 className="text-lg font-bold text-text-dark">{status.room.room_number}</h3>

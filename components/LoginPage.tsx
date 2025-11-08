@@ -1,11 +1,11 @@
 
 import React, { useState, useRef } from 'react';
-import type { Language } from '../types';
+import type { Language, UserRole } from '../types';
 import { translations } from '../constants';
 import { login } from '../services/authService';
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (role: UserRole) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   logoSrc: string | null;
@@ -51,8 +51,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
     setError('');
 
     try {
-      await login(username, password);
-      onLoginSuccess();
+      const { role } = await login(username, password);
+      onLoginSuccess(role);
     } catch (err: any) {
       // แสดงข้อความ error ที่ได้รับจาก API โดยตรง, ถ้าไม่มีให้ใช้ข้อความ default
       setError(err.message || t.invalidCredentialsError);
@@ -103,7 +103,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200"></div>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.loginTitle}</h1>
-        <p className="text-xs text-gray-400 mt-4">Version 1.0.0</p>
       </div>
 
       <LanguageSelector language={language} setLanguage={setLanguage} />
@@ -152,6 +151,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
           </button>
         </div>
       </form>
+      <p className="text-center text-xs text-gray-400 pt-2">SUNRIVER HOTEL management application Version 1.1.0</p>
     </div>
   );
 };

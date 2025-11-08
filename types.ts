@@ -1,5 +1,6 @@
 export type Language = 'en' | 'th';
 export type Page = 'dashboard' | 'room-status' | 'statistics' | 'cleaning' | 'receipt';
+export type UserRole = 'admin' | 'Housekeeper';
 
 export type RoomType = 'River view' | 'Standard view' | 'Cottage';
 export type BedType = 'Double bed' | 'Twin bed';

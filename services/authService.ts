@@ -3,13 +3,15 @@
 // which securely connects to the Neon database.
 // The frontend **must not** connect directly to the database for security reasons.
 
+import type { UserRole } from '../types';
+
 /**
  * Calls the backend login API.
  * @param username The user's username.
  * @param password The user's password.
  * @returns A promise that resolves if credentials are valid.
  */
-export const login = async (username: string, password: string): Promise<{ success: boolean }> => {
+export const login = async (username: string, password: string): Promise<{ success: boolean; role: UserRole }> => {
   // --- THIS IS THE REAL IMPLEMENTATION ---
   // This code calls the backend API endpoint at `/api/login`.
   // You must create this endpoint as a Vercel Serverless Function
@@ -28,7 +30,7 @@ export const login = async (username: string, password: string): Promise<{ succe
       throw new Error(errorData.message);
     }
     
-    // API จะส่ง { success: true } กลับมาเมื่อ login สำเร็จ
+    // API will return { success: true, role: '...' } on successful login
     return await response.json(); 
   } catch (error) {
     console.error('Login API call failed:', error);
