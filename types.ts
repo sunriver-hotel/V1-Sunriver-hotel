@@ -35,7 +35,6 @@ export interface Booking {
   check_out_date: string; // YYYY-MM-DD
   status: BookingStatus;
   price_per_night: number;
-  total_price?: number;
   deposit?: number;
   created_at: string; // ISO string
   // Joined data

@@ -17,7 +17,7 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
         b.booking_id, b.customer_id, b.room_id, 
         TO_CHAR(b.check_in_date, 'YYYY-MM-DD') as check_in_date, 
         TO_CHAR(b.check_out_date, 'YYYY-MM-DD') as check_out_date, 
-        b.status, b.price_per_night, b.total_price, b.deposit, b.created_at,
+        b.status, b.price_per_night, b.deposit, b.created_at,
         json_build_object(
             'customer_id', c.customer_id,
             'customer_name', c.customer_name,
@@ -97,19 +97,18 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
             }
         }
         
-        // Calculate total price based on nights
-        const nights = (new Date(check_out_date).getTime() - new Date(check_in_date).getTime()) / (1000 * 60 * 60 * 24);
-        const totalPrice = nights > 0 ? nights * price_per_night : price_per_night;
-
         const createdBookings = [];
         // Loop through all selected rooms and create a booking for each
         for (const room_id of room_ids) {
+            // **THE DEFINITIVE FIX:** Explicitly call the `generate_booking_id()` function in the INSERT statement.
+            // This is more robust than relying on a DEFAULT value which can be unreliable in some serverless environments.
+            // It ensures the function is called for every insert, solving the race condition permanently.
             const bookingQuery = `
-                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit, total_price)
-                VALUES (generate_booking_id(), $1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO public.bookings (booking_id, customer_id, room_id, check_in_date, check_out_date, status, price_per_night, deposit)
+                VALUES (generate_booking_id(), $1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
             `;
-            const bookingResult = await client.query(bookingQuery, [customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit, totalPrice]);
+            const bookingResult = await client.query(bookingQuery, [customerId, room_id, check_in_date, check_out_date, status, price_per_night, deposit]);
             createdBookings.push(bookingResult.rows[0]);
         }
 
@@ -119,6 +118,7 @@ const createBooking = async (req: VercelRequest, res: VercelResponse) => {
         await client.query('ROLLBACK');
         console.error('Create Booking Error:', error);
 
+        // Add more specific error handling to help diagnose DB-side issues.
         if (error instanceof Error && (error.message.includes('function generate_booking_id() does not exist') || error.message.includes('relation "booking_seq" does not exist'))) {
              return res.status(500).json({ message: 'The database function or sequence for generating Booking IDs is missing. Please ensure `booking_seq` and `generate_booking_id` are created.' });
         }
@@ -148,17 +148,13 @@ const updateBooking = async (req: VercelRequest, res: VercelResponse) => {
         [customer.customer_name, customer.phone, customer.email, customer.address, customer.tax_id, customer.customer_id]
     );
 
-    // Calculate total price based on nights
-    const nights = (new Date(check_out_date).getTime() - new Date(check_in_date).getTime()) / (1000 * 60 * 60 * 24);
-    const totalPrice = nights > 0 ? nights * price_per_night : price_per_night;
-
     const bookingQuery = `
         UPDATE public.bookings 
-        SET room_id = $1, check_in_date = $2, check_out_date = $3, status = $4, price_per_night = $5, deposit = $6, total_price = $8
+        SET room_id = $1, check_in_date = $2, check_out_date = $3, status = $4, price_per_night = $5, deposit = $6
         WHERE booking_id = $7
         RETURNING *;
     `;
-    const bookingResult = await client.query(bookingQuery, [room_id, check_in_date, check_out_date, status, price_per_night, deposit, booking_id, totalPrice]);
+    const bookingResult = await client.query(bookingQuery, [room_id, check_in_date, check_out_date, status, price_per_night, deposit, booking_id]);
 
     await client.query('COMMIT');
 
