@@ -269,7 +269,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
         return;
       }
       
-      const headers = ["ลำดับที่", "Booking ID", "ชื่อลูกค้า", "เบอร์โทรลูกค้า", "Check in date", "Check out date", "ราคาต่อคืน"];
+      const headers = ["ลำดับที่", "Booking ID", "ชื่อลูกค้า", "เบอร์โทรลูกค้า", "Check in date", "Check out date", "ราคาต่อคืน", "ราคารวม"];
       const csvRows = [headers.join(',')];
 
       bookingsForExport.forEach((booking, index) => {
@@ -284,6 +284,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
           booking.check_in_date,
           booking.check_out_date,
           booking.price_per_night,
+          booking.total_price ?? '',
         ];
         csvRows.push(row.join(','));
       });
