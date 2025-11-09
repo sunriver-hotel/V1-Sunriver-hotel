@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { Language, Room, Booking } from '../types';
 import { translations } from '../constants';
 import LineChart from './LineChart';
+import { getBookingsForRange } from '../services/bookingService';
 
 // --- Reusable Pie Chart Component ---
 interface PieChartProps {
@@ -124,6 +125,14 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
 
   const [occupancyPeriod, setOccupancyPeriod] = useState<OccupancyPeriod>('daily');
   const [popularityPeriod, setPopularityPeriod] = useState<PopularityPeriod>('monthly');
+
+  // State for Export feature
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  });
+  const [exportEndDate, setExportEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleMonthInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const [year, month] = e.target.value.split('-').map(Number);
@@ -249,6 +258,54 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
 
     return data.filter(item => item.value > 0).sort((a,b) => b.value - a.value);
   }, [allBookings, popularityPeriod, currentMonth]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const bookingsForExport = await getBookingsForRange(exportStartDate, exportEndDate);
+
+      if (bookingsForExport.length === 0) {
+        alert("No bookings found for the selected date range.");
+        return;
+      }
+      
+      const headers = ["ลำดับที่", "Booking ID", "ชื่อลูกค้า", "เบอร์โทรลูกค้า", "Check in date", "Check out date", "ราคาต่อคืน"];
+      const csvRows = [headers.join(',')];
+
+      bookingsForExport.forEach((booking, index) => {
+        // Sanitize data for CSV: enclose in quotes to handle commas, newlines.
+        const sanitize = (str: string | undefined | null) => `"${(str || '').replace(/"/g, '""')}"`;
+
+        const row = [
+          index + 1,
+          booking.booking_id,
+          sanitize(booking.customer?.customer_name),
+          booking.customer?.phone || '',
+          booking.check_in_date,
+          booking.check_out_date,
+          booking.price_per_night,
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+      const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Bookings_${exportStartDate}_to_${exportEndDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error("Export failed", err);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   const PeriodButton: React.FC<{ value: string, label: string, current: string, setter: (p: any) => void }> = ({ value, label, current, setter }) => {
     const isActive = current === value;
@@ -315,6 +372,42 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
     <div className="w-full h-full flex flex-col space-y-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-text-dark">{t.statisticsTitle}</h1>
       {chartContent()}
+
+      {/* Export Section */}
+      <div className="w-full">
+        <h2 className="text-xl font-bold text-text-dark mb-4">{t.exportTitle}</h2>
+        <div className="bg-white p-4 rounded-lg shadow-md">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label htmlFor="start-date" className="block text-sm font-medium text-text-dark">{t.startDate}</label>
+                    <input
+                    id="start-date"
+                    type="date"
+                    value={exportStartDate}
+                    onChange={(e) => setExportStartDate(e.target.value)}
+                    className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="end-date" className="block text-sm font-medium text-text-dark">{t.endDate}</label>
+                    <input
+                    id="end-date"
+                    type="date"
+                    value={exportEndDate}
+                    onChange={(e) => setExportEndDate(e.target.value)}
+                    className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
+                    />
+                </div>
+                 <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-yellow hover:bg-opacity-90 disabled:bg-yellow-300"
+                >
+                    {isExporting ? t.exporting : t.exportButton}
+                </button>
+            </div>
+        </div>
+      </div>
     </div>
   );
 };
