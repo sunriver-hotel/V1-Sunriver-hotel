@@ -183,3 +183,21 @@ export const getAllBookings = async (): Promise<Booking[]> => {
     throw error;
   }
 };
+
+/**
+ * Fetches bookings within a specific date range.
+ * @param startDate The start date of the range (YYYY-MM-DD).
+ * @param endDate The end date of the range (YYYY-MM-DD).
+ */
+export const getBookingsForRange = async (startDate: string, endDate: string): Promise<Booking[]> => {
+    try {
+        const response = await fetch(`/api/bookings?startDate=${startDate}&endDate=${endDate}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch bookings for the specified range');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API call to getBookingsForRange failed:', error);
+        throw error;
+    }
+};

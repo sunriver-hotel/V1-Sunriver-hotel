@@ -10,7 +10,7 @@ const pool = new Pool({
 });
 
 const getBookings = async (req: VercelRequest, res: VercelResponse) => {
-  const { year, month } = req.query;
+  const { year, month, startDate, endDate } = req.query;
   
   const baseQuery = `
       SELECT 
@@ -40,6 +40,7 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
 
   try {
     if (year && month) {
+      // Logic for calendar view
       const startDate = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
       const endDate = new Date(Date.UTC(Number(year), Number(month), 1));
       
@@ -47,7 +48,13 @@ const getBookings = async (req: VercelRequest, res: VercelResponse) => {
 
       const { rows } = await pool.query(query, [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]]);
       return res.status(200).json(rows);
-    } else {
+    } else if (startDate && endDate && typeof startDate === 'string' && typeof endDate === 'string') {
+      // New logic for data export feature
+      const query = `${baseQuery} WHERE b.check_in_date BETWEEN $1 AND $2 ORDER BY b.check_in_date ASC`;
+      const { rows } = await pool.query(query, [startDate, endDate]);
+      return res.status(200).json(rows);
+    }
+    else {
       // If no date filter, fetch all bookings for receipt page, ordered by most recent.
       const query = `${baseQuery} ORDER BY b.created_at DESC`;
       const { rows } = await pool.query(query);

@@ -144,6 +144,13 @@ export const translations = {
     checkInLabel: "Check in",
     checkOutLabel: "Check out",
 
+    // Export
+    exportTitle: "Export Booking Data",
+    startDate: "Start Date",
+    endDate: "End Date",
+    exportButton: "Export to Excel (.csv)",
+    exporting: "Exporting...",
+
     hotelInfo: {
       name: "Sunriver Hotel Limited Partnership",
       name_secondary: "Sunriver Hotel",
@@ -297,6 +304,13 @@ export const translations = {
     authorizedSignature: "ผู้มีอำนาจลงนาม",
     checkInLabel: "เช็คอิน",
     checkOutLabel: "เช็คเอาท์",
+
+    // Export
+    exportTitle: "ส่งออกข้อมูลการจอง",
+    startDate: "วันที่เริ่มต้น",
+    endDate: "วันที่สิ้นสุด",
+    exportButton: "ส่งออกเป็น Excel (.csv)",
+    exporting: "กำลังส่งออก...",
 
     hotelInfo: {
       name: "ห้างหุ้นส่วนจำกัด ซันริเวอร์โฮเทล",
