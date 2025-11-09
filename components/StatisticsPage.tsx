@@ -104,6 +104,17 @@ const PieChart: React.FC<PieChartProps> = ({ data, title }) => {
 };
 
 
+// --- Helper function for export ---
+const calculateNights = (checkIn: string, checkOut: string): number => {
+    if (!checkIn || !checkOut) return 0;
+    const start = new Date(checkIn + 'T00:00:00Z');
+    const end = new Date(checkOut + 'T00:00:00Z');
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return 0;
+    const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    return Math.round(duration);
+};
+
+
 // --- Main Statistics Page Component ---
 interface StatisticsPageProps {
   language: Language;
@@ -269,12 +280,15 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
         return;
       }
       
-      const headers = ["ลำดับที่", "Booking ID", "ชื่อลูกค้า", "เบอร์โทรลูกค้า", "Check in date", "Check out date", "ราคาต่อคืน"];
+      const headers = ["ลำดับที่", "Booking ID", "ชื่อลูกค้า", "เบอร์โทรลูกค้า", "Check in date", "Check out date", "จำนวนคืนที่พัก", "ราคาต่อคืน", "ราคาทั้งหมด"];
       const csvRows = [headers.join(',')];
 
       bookingsForExport.forEach((booking, index) => {
         // Sanitize data for CSV: enclose in quotes to handle commas, newlines.
         const sanitize = (str: string | undefined | null) => `"${(str || '').replace(/"/g, '""')}"`;
+        
+        const numberOfNights = calculateNights(booking.check_in_date, booking.check_out_date);
+        const totalPrice = numberOfNights * booking.price_per_night;
 
         const row = [
           index + 1,
@@ -283,7 +297,9 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
           booking.customer?.phone || '',
           booking.check_in_date,
           booking.check_out_date,
+          numberOfNights,
           booking.price_per_night,
+          totalPrice,
         ];
         csvRows.push(row.join(','));
       });
