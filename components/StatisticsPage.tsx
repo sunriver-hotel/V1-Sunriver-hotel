@@ -377,34 +377,38 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ language, rooms, allBoo
       <div className="w-full">
         <h2 className="text-xl font-bold text-text-dark mb-4">{t.exportTitle}</h2>
         <div className="bg-white p-4 rounded-lg shadow-md">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label htmlFor="start-date" className="block text-sm font-medium text-text-dark">{t.startDate}</label>
-                    <input
-                    id="start-date"
-                    type="date"
-                    value={exportStartDate}
-                    onChange={(e) => setExportStartDate(e.target.value)}
-                    className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
-                    />
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                <div className="flex-grow grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="start-date" className="block text-sm font-medium text-text-dark">{t.startDate}</label>
+                        <input
+                        id="start-date"
+                        type="date"
+                        value={exportStartDate}
+                        onChange={(e) => setExportStartDate(e.target.value)}
+                        className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="end-date" className="block text-sm font-medium text-text-dark">{t.endDate}</label>
+                        <input
+                        id="end-date"
+                        type="date"
+                        value={exportEndDate}
+                        onChange={(e) => setExportEndDate(e.target.value)}
+                        className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
+                        />
+                    </div>
                 </div>
-                <div>
-                    <label htmlFor="end-date" className="block text-sm font-medium text-text-dark">{t.endDate}</label>
-                    <input
-                    id="end-date"
-                    type="date"
-                    value={exportEndDate}
-                    onChange={(e) => setExportEndDate(e.target.value)}
-                    className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-primary-yellow focus:border-primary-yellow"
-                    />
+                <div className="flex-shrink-0 w-full sm:w-auto">
+                    <button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-yellow hover:bg-opacity-90 disabled:bg-yellow-300"
+                    >
+                        {isExporting ? t.exporting : t.exportButton}
+                    </button>
                 </div>
-                 <button
-                    onClick={handleExport}
-                    disabled={isExporting}
-                    className="w-full justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-yellow hover:bg-opacity-90 disabled:bg-yellow-300"
-                >
-                    {isExporting ? t.exporting : t.exportButton}
-                </button>
             </div>
         </div>
       </div>
