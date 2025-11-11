@@ -17,7 +17,13 @@ const LineChart: React.FC<LineChartProps> = ({ data, title }) => {
     return <div className="text-center text-text-light p-8">{`No data available for ${title}`}</div>;
   }
 
-  const xScale = (index: number) => padding.left + (index / (data.length - 1)) * (width - padding.left - padding.right);
+  const xScale = (index: number) => {
+    if (data.length === 1) {
+      // Center the single point if there's only one
+      return padding.left + (width - padding.left - padding.right) / 2;
+    }
+    return padding.left + (index / (data.length - 1)) * (width - padding.left - padding.right);
+  };
   const yScale = (value: number) => height - padding.bottom - (value / yAxisMax) * (height - padding.top - padding.bottom);
 
   const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i)} ${yScale(d.value)}`).join(' ');
