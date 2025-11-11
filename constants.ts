@@ -42,10 +42,13 @@ export const translations = {
     loadingBookings: "Loading booking data...",
 
     // Daily Summary
+    dailyList: "Daily Activity",
     checkIns: "Check-ins",
     checkOuts: "Check-outs",
     staying: "Staying",
     noActivity: "No activity for this day.",
+    night: "Night",
+    nights: "Nights",
 
     // Booking Modal
     bookingDetails: "Booking Details",
@@ -203,10 +206,13 @@ export const translations = {
     loadingBookings: "กำลังโหลดข้อมูลการจอง...",
 
     // Daily Summary
+    dailyList: "รายการประจำวัน",
     checkIns: "เช็คอิน",
     checkOuts: "เช็คเอาท์",
     staying: "กำลังเข้าพัก",
     noActivity: "ไม่มีกิจกรรมสำหรับวันนี้",
+    night: "คืน",
+    nights: "คืน",
 
     // Booking Modal
     bookingDetails: "รายละเอียดการจอง",
