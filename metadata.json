@@ -1,5 +1,5 @@
 {
-  "name": "V1.1.3 Sunriver hotel",
+  "name": "V1.1.4 Sunriver hotel",
   "description": "A simple hotel booking management system for hotel staff to manage room reservations, view availability on a calendar, and handle guest information. This initial version includes only the login page.",
   "requestFramePermissions": []
 }

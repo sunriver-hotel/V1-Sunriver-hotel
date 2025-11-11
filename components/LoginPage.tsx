@@ -234,7 +234,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
         </button>
       </div>
 
-      <p className="text-center text-xs text-gray-400 pt-2">SUNRIVER HOTEL Management Application Version 1.1.3</p>
+      <p className="text-center text-xs text-gray-400 pt-2">SUNRIVER HOTEL Management Application Version 1.1.4</p>
     </div>
   );
 };
