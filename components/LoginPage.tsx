@@ -235,7 +235,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, language, setLang
       </div>
 
       <p className="text-center text-xs text-gray-400 pt-2">
-        © 2024 SUNRIVER HOTEL Management Application.<br />
+        © 2025 SUNRIVER HOTEL Management Application.<br />
         All rights reserved. Version 1.1.4
       </p>
     </div>
