@@ -1,3 +1,4 @@
+
 import type { Room, Booking, CleaningStatus } from '../types';
 
 /**
@@ -148,9 +149,10 @@ export const getLogo = async (): Promise<string | null> => {
 
 /**
  * Saves the application logo via the settings API.
+ * Uploads to Cloudinary via the backend and returns the new URL.
  * @param logoDataUrl The base64 data URL of the logo image.
  */
-export const saveLogo = async (logoDataUrl: string): Promise<void> => {
+export const saveLogo = async (logoDataUrl: string): Promise<{ logoUrl: string }> => {
   try {
     const response = await fetch('/api/settings', {
       method: 'POST',
@@ -162,6 +164,7 @@ export const saveLogo = async (logoDataUrl: string): Promise<void> => {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || 'Failed to save logo');
     }
+    return await response.json();
   } catch (error) {
     console.error('API call to saveLogo failed:', error);
     throw error; // Re-throw to be caught by the UI component

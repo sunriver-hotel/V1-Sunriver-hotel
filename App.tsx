@@ -148,8 +148,8 @@ function App() {
   const handleLogoUpload = async (logoDataUrl: string) => {
     setIsLogoLoading(true);
     try {
-        await saveLogo(logoDataUrl);
-        setLogoSrc(logoDataUrl); // Update UI immediately
+        const { logoUrl } = await saveLogo(logoDataUrl);
+        setLogoSrc(logoUrl); // Update UI with the new Cloudinary URL
     } catch (err: any) {
         alert(`Error saving logo: ${err.message}`);
     } finally {

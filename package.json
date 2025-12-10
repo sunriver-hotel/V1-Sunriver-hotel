@@ -1,3 +1,4 @@
+
 {
   "name": "hotel-booking-app",
   "version": "1.0.0",
@@ -15,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.0",
+    "cloudinary": "^2.2.0",
     "pg": "^8.11.5",
     "react": "^19.0.0-rc-f994737d14-20240522",
     "react-dom": "^19.0.0-rc-f994737d14-20240522",
