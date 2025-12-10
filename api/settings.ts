@@ -43,6 +43,7 @@ const saveSetting = async (req: VercelRequest, res: VercelResponse) => {
         return res.status(500).json({ message: 'Cloudinary environment variables are not configured on the server.' });
     }
 
+    const client = await pool.connect();
     try {
         // Configure Cloudinary
         cloudinary.config({
@@ -51,12 +52,19 @@ const saveSetting = async (req: VercelRequest, res: VercelResponse) => {
             api_secret: process.env.CLOUDINARY_API_SECRET,
         });
 
-        // Upload to Cloudinary
+        // Upload to Cloudinary with more specific error handling
         const uploadResponse = await cloudinary.uploader.upload(value, {
             public_id: 'sunriver_hotel_logo', // Use a fixed public ID to overwrite
             overwrite: true,
             folder: 'sunriver_hotel' // Organize in a folder
+        }).catch(err => {
+            console.error('Cloudinary Upload Error:', err);
+            throw new Error(`Cloudinary upload failed: ${err.message || 'Unknown error'}`);
         });
+
+        if (!uploadResponse || !uploadResponse.secure_url) {
+            throw new Error('Cloudinary upload did not return a valid response or URL.');
+        }
 
         const logoUrl = uploadResponse.secure_url;
         
@@ -67,16 +75,24 @@ const saveSetting = async (req: VercelRequest, res: VercelResponse) => {
             ON CONFLICT (setting_key) DO UPDATE
             SET setting_value = $2;
         `;
-        await pool.query(query, [key, logoUrl]); // Save the URL, not the base64 value
+        await client.query(query, [key, logoUrl]);
         
         return res.status(200).json({ success: true, message: 'Logo saved successfully.', logoUrl: logoUrl });
 
     } catch (error) {
         console.error('Save Setting Error (Cloudinary/DB):', error);
-        if (error instanceof Error && (error as any).code === '42P01') {
-             return res.status(500).json({ message: 'The `app_settings` table does not exist. Please run the required SQL command.' });
+
+        let errorMessage = 'An unexpected error occurred.';
+        if (error instanceof Error) {
+            errorMessage = error.message; // Use the specific error from the try block
+             if ((error as any).code === '42P01') {
+                errorMessage = 'The `app_settings` table does not exist. Please run the required SQL command.';
+            }
         }
-        return res.status(500).json({ message: 'Internal Server Error during logo upload.' });
+        
+        return res.status(500).json({ message: errorMessage });
+    } finally {
+        client.release();
     }
 };
 
